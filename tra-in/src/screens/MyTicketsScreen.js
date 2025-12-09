@@ -1,29 +1,21 @@
-import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import { Colors, Typography, Spacing } from "../constants/theme";
+import React from "react";
+import { Text, View, SafeAreaView, ScrollView } from "react-native";
+import { screenStyles, contentStyles } from "../constants/screenStyles";
+import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 
 const MyTicketsScreen = ({ setActiveTab }) => {
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>트레:in(人)</Text>
-          <TouchableOpacity style={styles.menuButton}>
-            <Text style={styles.menuText}>☰</Text>
-          </TouchableOpacity>
-        </View>
+    <SafeAreaView style={screenStyles.container}>
+      <ScrollView
+        style={screenStyles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader />
 
-        <View style={styles.body}>
-          <Text style={styles.screenTitle}>내 티켓</Text>
-          <Text style={styles.screenDescription}>
+        <View style={screenStyles.body}>
+          <Text style={contentStyles.screenTitle}>내 티켓</Text>
+          <Text style={contentStyles.screenDescription}>
             예약된 티켓이 여기 표시됩니다
           </Text>
         </View>
@@ -33,51 +25,5 @@ const MyTicketsScreen = ({ setActiveTab }) => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  content: {
-    flex: 1,
-  },
-  header: {
-    backgroundColor: Colors.korailBlue,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    height: 69,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitle: {
-    ...Typography.title,
-    color: Colors.white,
-    textAlign: "center",
-  },
-  menuButton: {
-    position: "absolute",
-    right: Spacing.md,
-    padding: Spacing.sm,
-  },
-  menuText: {
-    fontSize: 24,
-    color: Colors.white,
-  },
-  body: {
-    paddingHorizontal: 17,
-    paddingTop: Spacing.lg,
-  },
-  screenTitle: {
-    ...Typography.title,
-    color: Colors.korailBlue,
-    marginBottom: Spacing.md,
-  },
-  screenDescription: {
-    ...Typography.body.medium,
-    color: Colors.korailGray,
-  },
-});
 
 export default MyTicketsScreen;
