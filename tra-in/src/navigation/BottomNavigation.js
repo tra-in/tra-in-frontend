@@ -7,7 +7,12 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Colors, Typography, Spacing, BorderRadius } from "../constants/theme";
-import { HomeIcon, ActivityIcon, CalendarIcon, ProfileIcon } from "./Icons";
+import {
+  HomeIcon,
+  ActivityIcon,
+  CalendarIcon,
+  ProfileIcon,
+} from "../components/Icons";
 
 const BottomNavigation = ({ activeTab, setActiveTab }) => {
   const { width } = useWindowDimensions();

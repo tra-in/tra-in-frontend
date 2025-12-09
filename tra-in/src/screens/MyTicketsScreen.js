@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Colors, Typography, Spacing } from "../constants/theme";
-import BottomNavigation from "../components/BottomNavigation";
+import BottomNavigation from "../navigation/BottomNavigation";
 
 const MyTicketsScreen = ({ setActiveTab }) => {
   return (

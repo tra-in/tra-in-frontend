@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Colors, Typography, Spacing } from "../constants/theme";
 import TicketBookingCard from "../components/TicketBookingCard";
-import BottomNavigation from "../components/BottomNavigation";
+import BottomNavigation from "../navigation/BottomNavigation";
 
 const HomeScreen = ({ setActiveTab }) => {
   return (
