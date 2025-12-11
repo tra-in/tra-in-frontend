@@ -16,6 +16,28 @@ const dummyPlaces = [
     closedDay: "격주 월요일",
     visitDate: "12월 15일",
     visited: true,
+    imageUrl: "https://picsum.photos/200/150?random=0",
+    images: [
+      "https://picsum.photos/133/167?random=0",
+      "https://picsum.photos/85/81?random=1",
+      "https://picsum.photos/85/81?random=2",
+      "https://picsum.photos/85/81?random=3",
+      "https://picsum.photos/85/81?random=4",
+    ],
+    address: {
+      new: "대전광역시 동구 가양동 578-33",
+      old: "(도평동) 대전 동구 대성2길 35"
+    },
+    phone: "010 - 2113 - 2945",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "화(12/16)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "수(12/17)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "목(12/18)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "금(12/19)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "토(12/20)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+      { day: "일(12/21)", hours: "11:00 ~ 21:30", lastOrder: "20:30 라스트오더" },
+    ],
   }),
   createPlace({
     id: "place-2",
@@ -25,6 +47,28 @@ const dummyPlaces = [
     closedDay: null,
     visitDate: "12월 14일",
     visited: true,
+    imageUrl: "https://picsum.photos/200/150?random=5",
+    images: [
+      "https://picsum.photos/133/167?random=5",
+      "https://picsum.photos/85/81?random=6",
+      "https://picsum.photos/85/81?random=7",
+      "https://picsum.photos/85/81?random=8",
+      "https://picsum.photos/85/81?random=9",
+    ],
+    address: {
+      new: "대전광역시 중구 은행동 145",
+      old: "대전 중구 대종로480번길 15"
+    },
+    phone: "042 - 253 - 0393",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "화(12/16)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "수(12/17)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "목(12/18)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "금(12/19)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "토(12/20)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "일(12/21)", hours: "08:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+    ],
   }),
   createPlace({
     id: "place-3",
@@ -34,6 +78,28 @@ const dummyPlaces = [
     closedDay: "매장별 상이",
     visitDate: "12월 13일",
     visited: true,
+    imageUrl: "https://picsum.photos/200/150?random=10",
+    images: [
+      "https://picsum.photos/133/167?random=10",
+      "https://picsum.photos/85/81?random=11",
+      "https://picsum.photos/85/81?random=12",
+      "https://picsum.photos/85/81?random=13",
+      "https://picsum.photos/85/81?random=14",
+    ],
+    address: {
+      new: "대전광역시 중구 소제동",
+      old: "대전 중구 소제동 일대"
+    },
+    phone: "042 - 606 - 6395",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "화(12/16)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "수(12/17)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "목(12/18)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "금(12/19)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "토(12/20)", hours: "10:00 ~ 22:00", lastOrder: "21:30 라스트오더" },
+      { day: "일(12/21)", hours: "매장별 상이", lastOrder: "" },
+    ],
   }),
   createPlace({
     id: "place-4",
@@ -43,6 +109,28 @@ const dummyPlaces = [
     closedDay: null,
     visitDate: null,
     visited: false,
+    imageUrl: "https://picsum.photos/200/150?random=15",
+    images: [
+      "https://picsum.photos/133/167?random=15",
+      "https://picsum.photos/85/81?random=16",
+      "https://picsum.photos/85/81?random=17",
+      "https://picsum.photos/85/81?random=18",
+      "https://picsum.photos/85/81?random=19",
+    ],
+    address: {
+      new: "대전광역시 대덕구 이사동",
+      old: "대전 대덕구 이사동 산3-4"
+    },
+    phone: "042 - 608 - 6394",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "상시 개방", lastOrder: "" },
+      { day: "화(12/16)", hours: "상시 개방", lastOrder: "" },
+      { day: "수(12/17)", hours: "상시 개방", lastOrder: "" },
+      { day: "목(12/18)", hours: "상시 개방", lastOrder: "" },
+      { day: "금(12/19)", hours: "상시 개방", lastOrder: "" },
+      { day: "토(12/20)", hours: "상시 개방", lastOrder: "" },
+      { day: "일(12/21)", hours: "상시 개방", lastOrder: "" },
+    ],
   }),
   createPlace({
     id: "place-5",
@@ -52,6 +140,28 @@ const dummyPlaces = [
     closedDay: "일요일",
     visitDate: null,
     visited: false,
+    imageUrl: "https://picsum.photos/200/150?random=20",
+    images: [
+      "https://picsum.photos/133/167?random=20",
+      "https://picsum.photos/85/81?random=21",
+      "https://picsum.photos/85/81?random=22",
+      "https://picsum.photos/85/81?random=23",
+      "https://picsum.photos/85/81?random=24",
+    ],
+    address: {
+      new: "대전광역시 동구 중앙로 215",
+      old: "대전 동구 정동 1-1"
+    },
+    phone: "042 - 221 - 1905",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "화(12/16)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "수(12/17)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "목(12/18)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "금(12/19)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "토(12/20)", hours: "09:00 ~ 18:00", lastOrder: "" },
+      { day: "일(12/21)", hours: "휴무", lastOrder: "" },
+    ],
   }),
   createPlace({
     id: "place-6",
@@ -61,6 +171,28 @@ const dummyPlaces = [
     closedDay: "월요일",
     visitDate: null,
     visited: false,
+    imageUrl: "https://picsum.photos/200/150?random=25",
+    images: [
+      "https://picsum.photos/133/167?random=25",
+      "https://picsum.photos/85/81?random=26",
+      "https://picsum.photos/85/81?random=27",
+      "https://picsum.photos/85/81?random=28",
+      "https://picsum.photos/85/81?random=29",
+    ],
+    address: {
+      new: "대전광역시 동구 판암동 584",
+      old: "대전 동구 판암로 265"
+    },
+    phone: "042 - 624 - 1905",
+    weeklyHours: [
+      { day: "월(12/15)", hours: "휴무", lastOrder: "" },
+      { day: "화(12/16)", hours: "10:00 ~ 20:00", lastOrder: "" },
+      { day: "수(12/17)", hours: "10:00 ~ 20:00", lastOrder: "" },
+      { day: "목(12/18)", hours: "10:00 ~ 20:00", lastOrder: "" },
+      { day: "금(12/19)", hours: "10:00 ~ 20:00", lastOrder: "" },
+      { day: "토(12/20)", hours: "10:00 ~ 20:00", lastOrder: "" },
+      { day: "일(12/21)", hours: "10:00 ~ 20:00", lastOrder: "" },
+    ],
   }),
 ];
 

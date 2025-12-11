@@ -31,6 +31,8 @@ export const screenStyles = StyleSheet.create({
     position: "absolute",
     left: Spacing.md,
     padding: Spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   backButtonText: {
     fontSize: 28,

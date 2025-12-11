@@ -47,6 +47,8 @@ export const createPlace = ({
   visitDate = null,
   visited = false,
   imageUrl = null,
+  images = [], // 장소 이미지 배열 (최대 5개)
+  weeklyHours = null, // 주간 영업시간 배열
   location = null,
   address = null,
   phone = null,
@@ -59,6 +61,8 @@ export const createPlace = ({
   visitDate,
   visited,
   imageUrl,
+  images,
+  weeklyHours,
   location,
   address,
   phone,
