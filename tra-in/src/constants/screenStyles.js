@@ -27,6 +27,16 @@ export const screenStyles = StyleSheet.create({
     color: Colors.white,
     textAlign: "center",
   },
+  backButton: {
+    position: "absolute",
+    left: Spacing.md,
+    padding: Spacing.sm,
+  },
+  backButtonText: {
+    fontSize: 28,
+    color: Colors.white,
+    fontWeight: "300",
+  },
   menuButton: {
     position: "absolute",
     right: Spacing.md,

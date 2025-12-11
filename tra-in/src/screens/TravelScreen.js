@@ -34,7 +34,11 @@ const TravelScreen = ({ setActiveTab }) => {
           </TouchableOpacity>
 
           {/* 뱃지 목록 카드 */}
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.card} 
+            activeOpacity={0.8}
+            onPress={() => setActiveTab("badgeList")}
+          >
             <Text style={styles.cardTitle}>뱃지 목록</Text>
           </TouchableOpacity>
         </View>

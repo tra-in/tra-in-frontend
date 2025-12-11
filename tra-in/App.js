@@ -5,6 +5,7 @@ import HomeScreen from "./src/screens/HomeScreen";
 import TravelScreen from "./src/screens/TravelScreen";
 import RecordsScreen from "./src/screens/RecordsScreen";
 import MyTicketsScreen from "./src/screens/MyTicketsScreen";
+import BadgeListScreen from "./src/screens/BadgeListScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
@@ -15,6 +16,8 @@ export default function App() {
         return <HomeScreen setActiveTab={setActiveTab} />;
       case "travel":
         return <TravelScreen setActiveTab={setActiveTab} />;
+      case "badgeList":
+        return <BadgeListScreen setActiveTab={setActiveTab} />;
       case "records":
         return <RecordsScreen setActiveTab={setActiveTab} />;
       case "profile":
