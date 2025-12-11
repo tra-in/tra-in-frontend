@@ -1,40 +1,74 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Colors, Spacing, BorderRadius } from "../constants/theme";
 import CircularProgress from "./CircularProgress";
+import { getDisplayRegionName, getDateRangeText } from "../constants/badgeConstants";
 
 /**
- * 뱃지 카드 컴포넌트
+ * 뱃지(여행) 카드 컴포넌트
  * @param {object} badge - 뱃지 데이터 객체
  * @param {function} onPress - 카드 클릭 핸들러 (선택)
- * @param {function} onMenuPress - 메뉴 버튼 클릭 핸들러 (선택)
+ * @param {function} onMenuPress - 메뉴 버튼 클릭 핸들러 (선택) - (event) => void
+ * @param {boolean} hideMenu - 메뉴 버튼 숨김 여부
+ * @param {boolean} inline - 인라인 모드 (디테일 화면용)
+ * @param {boolean} completed - 완료 상태 (체크마크 표시)
  */
-const BadgeCard = ({ badge, onPress, onMenuPress }) => {
+const BadgeCard = ({ badge, onPress, onMenuPress, hideMenu = false, inline = false, completed = false }) => {
+  const CardWrapper = onPress ? TouchableOpacity : View;
+  const isCompleted = completed || (badge.progress === badge.total);
+  const menuButtonRef = useRef(null);
+  
+  // 지역 표시 (여러 지역인 경우 "대전 동구 외 1곳" 형태)
+  const displayRegion = getDisplayRegionName(badge.regions);
+  
+  // 날짜 범위 표시
+  const dateRangeText = getDateRangeText(badge.startDate, badge.endDate);
+
+  /**
+   * 메뉴 버튼 클릭 핸들러
+   */
+  const handleMenuPress = () => {
+    if (onMenuPress && menuButtonRef.current) {
+      menuButtonRef.current.measure((x, y, width, height, pageX, pageY) => {
+        onMenuPress({
+          x: pageX,
+          y: pageY,
+          width,
+          height,
+        });
+      });
+    }
+  };
+  
   return (
-    <TouchableOpacity 
-      style={styles.card} 
-      activeOpacity={0.8}
+    <CardWrapper 
+      style={[styles.card, inline && styles.inlineCard]} 
+      activeOpacity={onPress ? 0.8 : 1}
       onPress={onPress}
     >
-      <TouchableOpacity 
-        style={styles.menuButton}
-        onPress={onMenuPress}
-      >
-        <Text style={styles.menuDots}>⋮</Text>
-      </TouchableOpacity>
+      {!hideMenu && onMenuPress && (
+        <TouchableOpacity 
+          ref={menuButtonRef}
+          style={styles.menuButton}
+          onPress={handleMenuPress}
+        >
+          <Text style={styles.menuDots}>⋮</Text>
+        </TouchableOpacity>
+      )}
       
       <View style={styles.content}>
         <CircularProgress 
           progress={badge.progress} 
           total={badge.total} 
-          color={badge.color} 
+          color={badge.color}
+          showCheckmark={isCompleted}
         />
         
         <Text style={styles.title}>{badge.title}</Text>
-        <Text style={styles.subtitle}>{badge.subtitle}</Text>
-        <Text style={styles.region}>{badge.region}</Text>
+        <Text style={styles.subtitle}>{isCompleted ? "완료!" : dateRangeText}</Text>
+        <Text style={styles.region}>{displayRegion}</Text>
       </View>
-    </TouchableOpacity>
+    </CardWrapper>
   );
 };
 
@@ -52,6 +86,16 @@ const styles = StyleSheet.create({
     elevation: 3,
     position: "relative",
     minHeight: 180,
+  },
+  inlineCard: {
+    width: "100%",
+    backgroundColor: "#E8E8E8",
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    marginBottom: 15,
   },
   menuButton: {
     position: "absolute",
