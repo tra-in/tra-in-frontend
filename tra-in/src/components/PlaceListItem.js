@@ -10,7 +10,8 @@ import { Colors, Spacing } from "../constants/theme";
  * @param {boolean} showStatus - 미방문 상태 표시 여부 (미완료 화면용)
  */
 const PlaceListItem = ({ place, onPress, showDate = false, showStatus = false }) => {
-  const { name, type, businessHours, closedDay, visitDate, imageUrl, visited } = place;
+  const { name, type, businessHours, closedDay, visitDate, imageUrl, images, visited } = place;
+  const displayImage = imageUrl || (images && images.length > 0 ? images[0] : null);
 
   return (
     <TouchableOpacity
@@ -20,8 +21,8 @@ const PlaceListItem = ({ place, onPress, showDate = false, showStatus = false })
     >
       {/* 이미지 */}
       <View style={styles.imageContainer}>
-        {imageUrl ? (
-          <Image source={{ uri: imageUrl }} style={styles.image} />
+        {displayImage ? (
+          <Image source={{ uri: displayImage }} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.imagePlaceholder]} />
         )}

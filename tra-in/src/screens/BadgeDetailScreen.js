@@ -12,9 +12,10 @@ import PlaceListItem from "../components/PlaceListItem";
  * 진행 중이거나 미시작 상태의 여행 정보 표시
  * @param {function} setActiveTab - 탭 변경 함수
  * @param {function} setActiveScreen - 화면 변경 함수
+ * @param {function} setSelectedPlace - 선택된 장소 설정 함수
  * @param {object} badge - 뱃지(여행) 데이터
  */
-const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, badge }) => {
+const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge }) => {
   /**
    * 장소 정렬: 미방문 장소가 위로, 방문 완료한 장소는 아래로
    */
@@ -28,6 +29,14 @@ const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, badge }) => {
   const handleBackPress = () => {
     setActiveScreen(null);
     setActiveTab("badgeList");
+  };
+
+  /**
+   * 장소 클릭 핸들러
+   */
+  const handlePlacePress = (place) => {
+    setSelectedPlace(place);
+    setActiveScreen("placeDetail");
   };
 
   return (
@@ -57,7 +66,7 @@ const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, badge }) => {
               key={place.id}
               place={place}
               showStatus={true}
-              onPress={() => {/* TODO: 장소 상세 또는 체크 토글 */}}
+              onPress={() => handlePlacePress(place)}
             />
           ))}
         </ScrollView>

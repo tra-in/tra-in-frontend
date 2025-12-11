@@ -8,19 +8,26 @@ import MyTicketsScreen from "./src/screens/MyTicketsScreen";
 import BadgeListScreen from "./src/screens/BadgeListScreen";
 import BadgeDetailScreen from "./src/screens/BadgeDetailScreen";
 import BadgeCompletedScreen from "./src/screens/BadgeCompletedScreen";
+import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [activeScreen, setActiveScreen] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   const renderScreen = () => {
+    // 장소 상세 화면
+    if (activeScreen === "placeDetail" && selectedPlace) {
+      return <PlaceDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} place={selectedPlace} />;
+    }
+    
     // 뱃지 상세 화면 우선 처리
     if (activeScreen === "badgeDetail" && selectedBadge) {
-      return <BadgeDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} badge={selectedBadge} />;
+      return <BadgeDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} setSelectedPlace={setSelectedPlace} badge={selectedBadge} />;
     }
     if (activeScreen === "badgeCompleted" && selectedBadge) {
-      return <BadgeCompletedScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} badge={selectedBadge} />;
+      return <BadgeCompletedScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} setSelectedPlace={setSelectedPlace} badge={selectedBadge} />;
     }
 
     // 기본 탭 화면

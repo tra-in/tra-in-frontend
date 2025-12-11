@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import { VectorIcon } from "./Icons";
 
 /**
  * 원형 프로그레스 바 컴포넌트
@@ -61,9 +62,7 @@ const CircularProgress = ({ progress, total, color, size = 80, showCheckmark = f
       </Svg>
       <View style={[styles.textContainer, { width: size, height: size }]}>
         {showCheckmark ? (
-          <Text style={[styles.checkmark, { color: progressColor, fontSize: size * 0.5 }]}>
-            ✓
-          </Text>
+          <VectorIcon size={size * 0.4} color={progressColor} />
         ) : (
           <Text style={[styles.text, { color: progressColor }]}>
             {progress}/{total}

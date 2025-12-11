@@ -14,9 +14,10 @@ import { REGION_INFO, getDisplayRegionName } from "../constants/badgeConstants";
  * 모든 장소를 방문 완료한 여행 정보 표시
  * @param {function} setActiveTab - 탭 변경 함수
  * @param {function} setActiveScreen - 화면 변경 함수
+ * @param {function} setSelectedPlace - 선택된 장소 설정 함수
  * @param {object} badge - 완료된 뱃지(여행) 데이터
  */
-const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, badge }) => {
+const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge }) => {
   const [showModal, setShowModal] = useState(true);
 
   /**
@@ -61,7 +62,10 @@ const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, badge }) => {
               key={place.id}
               place={place}
               showDate={true}
-              onPress={() => {/* TODO: 장소 상세 */}}
+              onPress={() => {
+                setSelectedPlace(place);
+                setActiveScreen("placeDetail");
+              }}
             />
           ))}
         </View>
