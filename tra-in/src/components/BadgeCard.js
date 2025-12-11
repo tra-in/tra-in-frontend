@@ -65,7 +65,7 @@ const BadgeCard = ({ badge, onPress, onMenuPress, hideMenu = false, inline = fal
         />
         
         <Text style={styles.title}>{badge.title}</Text>
-        <Text style={styles.subtitle}>{isCompleted ? "완료!" : dateRangeText}</Text>
+        <Text style={styles.subtitle}>{dateRangeText}</Text>
         <Text style={styles.region}>{displayRegion}</Text>
       </View>
     </CardWrapper>
@@ -88,13 +88,14 @@ const styles = StyleSheet.create({
     minHeight: 180,
   },
   inlineCard: {
-    width: "100%",
-    backgroundColor: "#E8E8E8",
-    shadowColor: "transparent",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
+    width: "48%",
+    alignSelf: "center",
+    backgroundColor: Colors.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     marginBottom: 15,
   },
   menuButton: {
