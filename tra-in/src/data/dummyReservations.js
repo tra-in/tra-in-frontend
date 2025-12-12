@@ -1,0 +1,72 @@
+// 더미 예약 데이터
+export const dummyReservations = [
+  {
+    id: 1,
+    date: "2025.12.15 (월)",
+    departure: "부산",
+    arrival: "대전",
+    departureTime: "06:34",
+    arrivalTime: "08:16",
+    seat: "A3",
+    transfers: [
+      { station: "김천구미", time: "07:55", seat: "C5" },
+    ],
+  },
+  {
+    id: 2,
+    date: "2025.12.16 (화)",
+    departure: "대전",
+    arrival: "부산",
+    departureTime: "08:24",
+    arrivalTime: "09:02",
+    seat: "B7",
+    transfers: [],
+  },
+  {
+    id: 3,
+    date: "2025.12.20 (토)",
+    departure: "서울",
+    arrival: "광주",
+    departureTime: "14:20",
+    arrivalTime: "17:45",
+    seat: "D2",
+    transfers: [
+      { station: "대전", time: "15:30", seat: "E6" },
+    ],
+  },
+  {
+    id: 4,
+    date: "2025.12.22 (월)",
+    departure: "대전",
+    arrival: "부산",
+    departureTime: "09:15",
+    arrivalTime: "11:30",
+    seat: "E4",
+    transfers: [
+      { station: "대구", time: "10:10", seat: "D8" },
+    ],
+  },
+  {
+    id: 5,
+    date: "2025.12.25 (목)",
+    departure: "서울",
+    arrival: "부산",
+    departureTime: "10:00",
+    arrivalTime: "13:45",
+    seat: "A1",
+    transfers: [
+      { station: "대전", time: "11:05", seat: "B3" },
+      { station: "대구", time: "12:20", seat: "C6" },
+    ],
+  },
+  {
+    id: 6,
+    date: "2025.12.28 (일)",
+    departure: "광주",
+    arrival: "서울",
+    departureTime: "16:30",
+    arrivalTime: "19:50",
+    seat: "F9",
+    transfers: [],
+  },
+];

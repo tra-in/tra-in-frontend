@@ -27,20 +27,6 @@ const TravelScreen = ({ setActiveTab }) => {
           <TouchableOpacity style={styles.card} activeOpacity={0.8}>
             <Text style={styles.cardTitle}>여행 경로 추천</Text>
           </TouchableOpacity>
-
-          {/* 예약 목록 카드 */}
-          <TouchableOpacity style={styles.card} activeOpacity={0.8}>
-            <Text style={styles.cardTitle}>예약 목록</Text>
-          </TouchableOpacity>
-
-          {/* 뱃지 목록 카드 */}
-          <TouchableOpacity 
-            style={styles.card} 
-            activeOpacity={0.8}
-            onPress={() => setActiveTab("badgeList")}
-          >
-            <Text style={styles.cardTitle}>뱃지 목록</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
