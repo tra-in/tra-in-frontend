@@ -6,12 +6,11 @@ import TravelScreen from "./src/screens/TravelScreen";
 import RecordsScreen from "./src/screens/RecordsScreen";
 import MyTicketsScreen from "./src/screens/MyTicketsScreen";
 import ReservationListScreen from "./src/screens/ReservationListScreen";
-import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
-
 import BadgeListScreen from "./src/screens/BadgeListScreen";
 import BadgeDetailScreen from "./src/screens/BadgeDetailScreen";
 import BadgeCompletedScreen from "./src/screens/BadgeCompletedScreen";
 import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
+import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
@@ -64,7 +63,7 @@ export default function App() {
       case "records":
         return <RecordsScreen setActiveTab={setActiveTab} />;
       case "profile":
-        return <MyTicketsScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} />;  // ✅ 수정!
+        return <MyTicketsScreen setActiveTab={setActiveTab} />;
       default:
         return <HomeScreen setActiveTab={setActiveTab} />;
     }
