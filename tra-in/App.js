@@ -11,9 +11,11 @@ import BadgeDetailScreen from "./src/screens/BadgeDetailScreen";
 import BadgeCompletedScreen from "./src/screens/BadgeCompletedScreen";
 import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
+import BookingScreen from "./src/screens/BookingScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
+  const [searchParams, setSearchParams] = useState(null);
   const [activeScreen, setActiveScreen] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -41,7 +43,15 @@ export default function App() {
     // 기본 탭 화면
     switch (activeTab) {
       case "home":
-        return <HomeScreen setActiveTab={setActiveTab} />;
+        return <HomeScreen
+         setActiveTab={setActiveTab}
+         setSearchParams={setSearchParams}
+         />;
+      case "booking":
+        return <BookingScreen
+          setActiveTab={setActiveTab}
+          searchParams={searchParams}
+        />;
       case "travel":
         return <TravelScreen setActiveTab={setActiveTab} />;
       case "reservationList":
