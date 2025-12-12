@@ -5,6 +5,9 @@ import HomeScreen from "./src/screens/HomeScreen";
 import TravelScreen from "./src/screens/TravelScreen";
 import RecordsScreen from "./src/screens/RecordsScreen";
 import MyTicketsScreen from "./src/screens/MyTicketsScreen";
+import ReservationListScreen from "./src/screens/ReservationListScreen";
+import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
+
 import BadgeListScreen from "./src/screens/BadgeListScreen";
 import BadgeDetailScreen from "./src/screens/BadgeDetailScreen";
 import BadgeCompletedScreen from "./src/screens/BadgeCompletedScreen";
@@ -15,8 +18,14 @@ export default function App() {
   const [activeScreen, setActiveScreen] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
+  const [selectedReservation, setSelectedReservation] = useState(null);
 
   const renderScreen = () => {
+    // 예약 상세 화면
+    if (activeScreen === "reservationDetail" && selectedReservation) {
+      return <ReservationDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} reservation={selectedReservation} />;
+    }
+    
     // 장소 상세 화면
     if (activeScreen === "placeDetail" && selectedPlace) {
       return <PlaceDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} place={selectedPlace} />;
@@ -36,6 +45,14 @@ export default function App() {
         return <HomeScreen setActiveTab={setActiveTab} />;
       case "travel":
         return <TravelScreen setActiveTab={setActiveTab} />;
+      case "reservationList":
+        return (
+          <ReservationListScreen 
+            setActiveTab={setActiveTab} 
+            setActiveScreen={setActiveScreen}
+            setSelectedReservation={setSelectedReservation}
+          />
+        );
       case "badgeList":
         return (
           <BadgeListScreen 
@@ -47,7 +64,7 @@ export default function App() {
       case "records":
         return <RecordsScreen setActiveTab={setActiveTab} />;
       case "profile":
-        return <MyTicketsScreen setActiveTab={setActiveTab} />;
+        return <MyTicketsScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} />;  // ✅ 수정!
       default:
         return <HomeScreen setActiveTab={setActiveTab} />;
     }
