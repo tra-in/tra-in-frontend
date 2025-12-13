@@ -9,7 +9,7 @@ const TravelPlanCard = ({
   avatar,
   route = "부산 - 대전",
   date = "2025.12.15 (월)",
-  onAiPress,
+  onAiPress = () => {},
   scale = 1,
   cardWidth = 332,
   cardHeight = 188,

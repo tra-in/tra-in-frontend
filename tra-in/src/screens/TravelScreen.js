@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Text,
   View,
@@ -16,6 +16,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 import PlaceCard from "../components/PlaceCard";
 import TravelPlanCard from "../components/TravelPlanCard";
+import StopoverSelectModal from "../components/StopoverSelectModal";
 
 // Figma image assets (replace with actual URLs or local assets as needed)
 const places1 = [
@@ -93,6 +94,34 @@ const TravelScreen = ({ setActiveTab }) => {
   const baseWidth = 375;
   const scale = windowWidth / baseWidth;
 
+  // 더미 데이터
+  const trip = { from: "부산", via: "김천구미", to: "대전" };
+  const hasStopover = Boolean(trip.via);
+
+  // 모달 상태
+  const [stopoverModalVisible, setStopoverModalVisible] = useState(false);
+  const [selectedLeg, setSelectedLeg] = useState("LEG1"); // 기본 선택
+
+  // AI 추천 일정 버튼 클릭
+  const handleAiPress = () => {
+    if (hasStopover) {
+      setStopoverModalVisible(true);
+      return;
+    }
+    // 경유지 없으면 바로 추천 진행(지금은 더미)
+    console.log("추천 진행:", `${trip.from}-${trip.to}`);
+  };
+
+  // 모달에서 확인 클릭
+  const handleConfirmLeg = (legKey) => {
+    setStopoverModalVisible(false);
+
+    const segment =
+      legKey === "LEG1" ? `${trip.from}-${trip.via}` : `${trip.via}-${trip.to}`;
+
+    console.log("선택 구간:", legKey, segment);
+  };
+
   // 카드/섹션 등 주요 요소의 가로 크기 동적 계산
   const cardWidth = Math.round(332 * scale);
   const cardHeight = Math.round(188 * scale);
@@ -122,6 +151,7 @@ const TravelScreen = ({ setActiveTab }) => {
             cardWidth={cardWidth}
             cardHeight={cardHeight}
             avatarSize={avatarSize}
+            onAiPress={handleAiPress}
           />
           <Text
             style={[
@@ -194,7 +224,7 @@ const TravelScreen = ({ setActiveTab }) => {
             ]}
           >
             <Text style={[styles.sectionTitle, { fontSize: 18 * scale }]}>
-              오늘은 뭐 먹지? 대전 맛집 추천
+              여행 가서 뭐 먹지? 대전 맛집 추천
             </Text>
             <TouchableOpacity>
               <MaterialIcons
@@ -227,6 +257,16 @@ const TravelScreen = ({ setActiveTab }) => {
           </ScrollView>
         </View>
       </ScrollView>
+      <StopoverSelectModal
+        visible={stopoverModalVisible}
+        scale={scale}
+        trip={trip}
+        selectedLeg={selectedLeg}
+        setSelectedLeg={setSelectedLeg}
+        onClose={() => setStopoverModalVisible(false)}
+        onConfirm={() => handleConfirmLeg(selectedLeg)}
+      />
+
       <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
     </SafeAreaView>
   );
