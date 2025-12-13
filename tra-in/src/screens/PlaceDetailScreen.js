@@ -12,8 +12,10 @@ import { PhoneIcon, MapPinIcon, ClockIcon, ChevronDownIcon, CheckIcon } from "..
  * @param {function} setActiveScreen - 화면 변경 함수
  * @param {object} place - 장소 데이터
  * @param {function} onVisitToggle - 방문 토글 핸들러
+ * 
+ * 
  */
-const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle }) => {
+const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle, previousScreen}) => {
   const [showBusinessHours, setShowBusinessHours] = useState(false);
 
   if (!place) return null;
@@ -22,7 +24,11 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
    * 뒤로가기 핸들러
    */
   const handleBackPress = () => {
-    setActiveScreen(null);
+    if (previousScreen) {
+      setActiveScreen(previousScreen);
+    } else {
+      setActiveScreen(null);
+    }
   };
 
   /**
@@ -181,7 +187,13 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
         </View>
       </ScrollView>
 
-      <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
+      <BottomNavigation 
+        activeTab="travel" 
+        setActiveTab={(tab) => {
+          setActiveScreen(null);
+          setActiveTab(tab);
+        }}
+      />
     </SafeAreaView>
   );
 };

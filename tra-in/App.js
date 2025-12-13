@@ -22,6 +22,7 @@ export default function App() {
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
+  const [previousScreen, setPreviousScreen] = useState(null);
 
   const renderScreen = () => {
     // 예약 상세 화면
@@ -30,7 +31,13 @@ export default function App() {
     }
     // 장소 상세 화면
     if (activeScreen === "placeDetail" && selectedPlace) {
-      return <PlaceDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} place={selectedPlace} />;
+      return <PlaceDetailScreen 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab} 
+        setActiveScreen={setActiveScreen} 
+        place={selectedPlace}
+        previousScreen={previousScreen}
+      />;
     }
     // 카메라 채팅 화면
     if (activeScreen === "cameraChat") {
@@ -42,10 +49,24 @@ export default function App() {
     }
     // 뱃지 상세 화면 우선 처리
     if (activeScreen === "badgeDetail" && selectedBadge) {
-      return <BadgeDetailScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} setSelectedPlace={setSelectedPlace} badge={selectedBadge} />;
+      return <BadgeDetailScreen
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      setActiveScreen={setActiveScreen}
+      setSelectedPlace={setSelectedPlace}
+      badge={selectedBadge} 
+      setPreviousScreen={setPreviousScreen}
+      />;
     }
     if (activeScreen === "badgeCompleted" && selectedBadge) {
-      return <BadgeCompletedScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} setSelectedPlace={setSelectedPlace} badge={selectedBadge} />;
+      return <BadgeCompletedScreen 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      setActiveScreen={setActiveScreen} 
+      setSelectedPlace={setSelectedPlace} 
+      badge={selectedBadge} 
+      setPreviousScreen={setPreviousScreen}
+      />;
     }
 
     // 기본 탭 화면
@@ -68,10 +89,14 @@ export default function App() {
             setActiveTab={setActiveTab} 
             setSelectedBadge={setSelectedBadge}
             setActiveScreen={setActiveScreen}
+            setPreviousScreen={setPreviousScreen}
           />
         );
       case "records":
-        return <RecordsScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} />;
+        return <RecordsScreen 
+        setActiveTab={setActiveTab} 
+        setActiveScreen={setActiveScreen} 
+        />;
       case "profile":
         return (
           <MyTicketsScreen 
@@ -82,7 +107,9 @@ export default function App() {
           />
         );
       default:
-        return <HomeScreen setActiveTab={setActiveTab} />;
+        return <HomeScreen 
+        setActiveTab={setActiveTab} 
+        />;
     }
   };
 

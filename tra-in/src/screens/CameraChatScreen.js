@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ImageBackground } from "react-native";
+// import { SafeAreaView } from 'react-native-safe-area-context';
+import { screenStyles } from "../constants/screenStyles";
 import { Ionicons } from '@expo/vector-icons';
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
@@ -48,7 +49,7 @@ const CameraChatScreen = ({ activeTab, setActiveTab, setActiveScreen }) => {
         {
           id: prev.length + 1,
           sender: "user",
-          text: "은행동 맛집 추천해줘!",
+          text: "소제동이라는 곳에는 무엇이 유명하니? 안내해줄래?",
           time: "오전 10:22"
         }
       ]);
@@ -69,7 +70,7 @@ const CameraChatScreen = ({ activeTab, setActiveTab, setActiveScreen }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#000' }} edges={['top']}>
+    <SafeAreaView style={screenStyles.container}>
       <ScreenHeader showBackButton={true} onBackPress={() => setActiveScreen(null)} />
       
       <View style={{ flex: 1 }}>

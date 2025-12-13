@@ -17,7 +17,7 @@ import { REGION_INFO, getDisplayRegionName } from "../constants/badgeConstants";
  * @param {function} setSelectedPlace - 선택된 장소 설정 함수
  * @param {object} badge - 완료된 뱃지(여행) 데이터
  */
-const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge }) => {
+const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge, setPreviousScreen}) => {
   const [showModal, setShowModal] = useState(true);
 
   /**
@@ -63,6 +63,7 @@ const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace,
               place={place}
               showDate={true}
               onPress={() => {
+                setPreviousScreen("badgeDetail");
                 setSelectedPlace(place);
                 setActiveScreen("placeDetail");
               }}
@@ -71,7 +72,13 @@ const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace,
         </View>
       </ScrollView>
 
-      <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
+      <BottomNavigation 
+      activeTab="profile" 
+      setActiveTab={(tab) => {
+        setActiveScreen(null);
+        setActiveTab(tab);
+      }}
+    />
 
       {/* 축하 팝업 - 여러 지역인 경우 대표 지역명 표시 */}
       {showModal && (
