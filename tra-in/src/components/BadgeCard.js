@@ -13,7 +13,7 @@ import { getDisplayRegionName, getDateRangeText } from "../constants/badgeConsta
  * @param {boolean} inline - 인라인 모드 (디테일 화면용)
  * @param {boolean} completed - 완료 상태 (체크마크 표시)
  */
-const BadgeCard = ({ badge, onPress, onMenuPress, hideMenu = false, inline = false, completed = false }) => {
+const BadgeCard = ({ badge, onPress, onMenuPress, hideMenu = false, inline = false, completed = false, compact = false }) => {
   const CardWrapper = onPress ? TouchableOpacity : View;
   const isCompleted = completed || (badge.progress === badge.total);
   const menuButtonRef = useRef(null);
@@ -42,7 +42,7 @@ const BadgeCard = ({ badge, onPress, onMenuPress, hideMenu = false, inline = fal
   
   return (
     <CardWrapper 
-      style={[styles.card, inline && styles.inlineCard]} 
+      style={[styles.card, inline && styles.inlineCard, compact && styles.cardCompact]} 
       activeOpacity={onPress ? 0.8 : 1}
       onPress={onPress}
     >
@@ -86,6 +86,14 @@ const styles = StyleSheet.create({
     elevation: 3,
     position: "relative",
     minHeight: 180,
+  },
+  cardCompact: {
+    width: 160,
+    minHeight: 160,
+    borderRadius: 16,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inlineCard: {
     width: "48%",

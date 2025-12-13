@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Colors, Typography, Spacing, BorderRadius } from "../constants/theme";
 
-const ReservationCard = ({ reservation, onPress }) => {
+const ReservationCard = ({ reservation, onPress, compact = false }) => {
   // 모든 좌석 정보를 배열로 구성
   const allSeats = [
     reservation.seat, // 기본 좌석
@@ -11,18 +11,18 @@ const ReservationCard = ({ reservation, onPress }) => {
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, compact && styles.cardCompact]}
       activeOpacity={0.8}
       onPress={onPress}
     >
       {/* 날짜 */}
-      <Text style={styles.date}>{reservation.date}</Text>
+      <Text style={[styles.date, compact && styles.dateCompact]}>{reservation.date}</Text>
 
       {/* 출발지와 도착지 */}
       <View style={styles.routeContainer}>
         <View style={styles.stationContainer}>
-          <Text style={styles.stationName}>{reservation.departure}</Text>
-          <Text style={styles.time}>{reservation.departureTime}</Text>
+          <Text style={[styles.stationName, compact && styles.stationNameCompact]}>{reservation.departure}</Text>
+          <Text style={[styles.time, compact && styles.timeCompact]}>{reservation.departureTime}</Text>
         </View>
 
         {/* 화살표와 좌석 */}
@@ -38,8 +38,8 @@ const ReservationCard = ({ reservation, onPress }) => {
         </View>
 
         <View style={styles.stationContainer}>
-          <Text style={styles.stationName}>{reservation.arrival}</Text>
-          <Text style={styles.time}>{reservation.arrivalTime}</Text>
+          <Text style={[styles.stationName, compact && styles.stationNameCompact]}>{reservation.arrival}</Text>
+          <Text style={[styles.time, compact && styles.timeCompact]}>{reservation.arrivalTime}</Text>
         </View>
       </View>
 
@@ -101,6 +101,23 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.black,
   },
+  /* compact variants */
+  cardCompact: {
+    height: 110,
+    paddingHorizontal: Spacing.md,
+    paddingTop: 8,
+    borderRadius: 14,
+  },
+  dateCompact: {
+    fontSize: 12,
+    marginBottom: 6,
+  },
+  stationNameCompact: {
+    fontSize: 20,
+  },
+  timeCompact: {
+    fontSize: 14,
+  },
   arrowContainer: {
     width: 80,
     alignItems: "center",
@@ -116,11 +133,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   arrow: {
-    fontFamily: "Pretendard Variable",
-    fontSize: 40,
-    fontWeight: "700",
-    color: Colors.black,
-    marginVertical: 4,
+    color: Colors.white
   },
   detailButton: {
     position: "absolute",
