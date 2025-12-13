@@ -9,12 +9,10 @@ import {
   FlatList,
 } from "react-native";
 import { API_BASE } from "../config/api";
+import ScreenHeader from "../components/ScreenHeader";
+import BottomNavigation from "../navigation/BottomNavigation";
 
-const DATE_OPTIONS = [
-  "2025-12-16",
-  "2025-12-17",
-  "2025-12-18",
-];
+const DATE_OPTIONS = ["2025-12-16", "2025-12-17", "2025-12-18"];
 
 export default function HomeScreen({
   setActiveTab,
@@ -23,7 +21,7 @@ export default function HomeScreen({
 }) {
   const [ticketType, setTicketType] = useState(
     searchParams?.isHopper ? "hopper" : "normal"
-  ); // 'normal' | 'hopper'
+  );
 
   const [stations, setStations] = useState([]);
   const [origin, setOrigin] = useState(searchParams?.originName || "부산");
@@ -39,7 +37,6 @@ export default function HomeScreen({
       .then((res) => res.json())
       .then((data) => {
         setStations(data);
-        // 초기값이 stations에 없는 경우 첫 번째로 세팅
         if (!searchParams && data.length >= 2) {
           setOrigin(data[0].name);
           setDest(data[1].name);
@@ -57,7 +54,6 @@ export default function HomeScreen({
     if (stationSelectMode === "origin") {
       setOrigin(name);
       if (name === dest) {
-        // 출발/도착이 같으면 도착을 다른 걸로 바꿔주자
         const other = stations.find((s) => s.name !== name);
         if (other) setDest(other.name);
       }
@@ -87,140 +83,158 @@ export default function HomeScreen({
 
   return (
     <View style={styles.container}>
-      {/* 승차권 / 메뚜기 */}
-      <View style={styles.ticketTypeRow}>
-        <Pressable
-          style={[
-            styles.ticketTypeButton,
-            ticketType === "normal" && styles.ticketTypeButtonActive,
-          ]}
-          onPress={() => setTicketType("normal")}
-        >
-          <Text
+      <ScreenHeader
+        title="트레:in(人)"
+        showBackButton={false}
+      />
+
+      <View style={styles.content}>
+        {/* 승차권 / 메뚜기 토글 */}
+        <View style={styles.ticketTypeRow}>
+          <Pressable
             style={[
-              styles.ticketTypeText,
-              ticketType === "normal" && styles.ticketTypeTextActive,
+              styles.ticketTypeButton,
+              ticketType === "normal" && styles.ticketTypeButtonActive,
             ]}
+            onPress={() => setTicketType("normal")}
           >
-            승차권 예매
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.ticketTypeButton,
-            ticketType === "hopper" && styles.ticketTypeButtonActive,
-          ]}
-          onPress={() => setTicketType("hopper")}
-        >
-          <Text
-            style={[
-              styles.ticketTypeText,
-              ticketType === "hopper" && styles.ticketTypeTextActive,
-            ]}
-          >
-            메뚜기 예매
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* 출발/도착/날짜/인원 카드 */}
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>출발</Text>
-        <TouchableOpacity onPress={() => openStationModal("origin")}>
-          <Text style={styles.stationText}>{origin}</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.arrowText}>➜</Text>
-
-        <Text style={styles.cardLabel}>도착</Text>
-        <TouchableOpacity onPress={() => openStationModal("dest")}>
-          <Text style={styles.stationText}>{dest}</Text>
-        </TouchableOpacity>
-
-        <View style={styles.row}>
-          <Text style={styles.smallLabel}>가는 날</Text>
-          <View style={styles.dateRow}>
-            {DATE_OPTIONS.map((d) => (
-              <Pressable
-                key={d}
-                style={[
-                  styles.dateChip,
-                  date === d && styles.dateChipActive,
-                ]}
-                onPress={() => setDate(d)}
-              >
-                <Text
-                  style={[
-                    styles.dateChipText,
-                    date === d && styles.dateChipTextActive,
-                  ]}
-                >
-                  {d}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.smallLabel}>인원 선택</Text>
-          <View style={styles.passengerRow}>
-            <Pressable style={styles.countButton} onPress={decrPassengers}>
-              <Text>-</Text>
-            </Pressable>
-            <Text style={styles.smallValue}>어른 {passengers}명</Text>
-            <Pressable style={styles.countButton} onPress={incrPassengers}>
-              <Text>+</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
-      {/* 열차 조회 버튼 */}
-      <Pressable style={styles.searchButton} onPress={handleSearch}>
-        <Text style={styles.searchButtonText}>열차 조회</Text>
-      </Pressable>
-
-      {/* 역 선택 모달 */}
-      <Modal
-        visible={stationModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setStationModalVisible(false)}
-      >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>
-              {stationSelectMode === "origin" ? "출발역 선택" : "도착역 선택"}
-            </Text>
-            <FlatList
-              data={stations}
-              keyExtractor={(item) => String(item.id)}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={styles.modalItem}
-                  onPress={() => handleSelectStation(item.name)}
-                >
-                  <Text>{item.name}</Text>
-                </Pressable>
-              )}
-            />
-            <Pressable
-              style={styles.modalClose}
-              onPress={() => setStationModalVisible(false)}
+            <Text
+              style={[
+                styles.ticketTypeText,
+                ticketType === "normal" && styles.ticketTypeTextActive,
+              ]}
             >
-              <Text>닫기</Text>
-            </Pressable>
+              승차권 예매
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={[
+              styles.ticketTypeButton,
+              ticketType === "hopper" && styles.ticketTypeButtonActive,
+            ]}
+            onPress={() => setTicketType("hopper")}
+          >
+            <Text
+              style={[
+                styles.ticketTypeText,
+                ticketType === "hopper" && styles.ticketTypeTextActive,
+              ]}
+            >
+              메뚜기 예매
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* 출발/도착/날짜/인원 카드 */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>출발</Text>
+          <TouchableOpacity onPress={() => openStationModal("origin")}>
+            <Text style={styles.stationText}>{origin}</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.arrowText}>➜</Text>
+
+          <Text style={styles.cardLabel}>도착</Text>
+          <TouchableOpacity onPress={() => openStationModal("dest")}>
+            <Text style={styles.stationText}>{dest}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.row}>
+            <Text style={styles.smallLabel}>가는 날</Text>
+            <View style={styles.dateRow}>
+              {DATE_OPTIONS.map((d) => (
+                <Pressable
+                  key={d}
+                  style={[
+                    styles.dateChip,
+                    date === d && styles.dateChipActive,
+                  ]}
+                  onPress={() => setDate(d)}
+                >
+                  <Text
+                    style={[
+                      styles.dateChipText,
+                      date === d && styles.dateChipTextActive,
+                    ]}
+                  >
+                    {d}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <Text style={styles.smallLabel}>인원 선택</Text>
+            <View style={styles.passengerRow}>
+              <Pressable style={styles.countButton} onPress={decrPassengers}>
+                <Text>-</Text>
+              </Pressable>
+              <Text style={styles.smallValue}>어른 {passengers}명</Text>
+              <Pressable style={styles.countButton} onPress={incrPassengers}>
+                <Text>+</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
-      </Modal>
+
+        {/* 열차 조회 버튼 */}
+        <Pressable style={styles.searchButton} onPress={handleSearch}>
+          <Text style={styles.searchButtonText}>열차 조회</Text>
+        </Pressable>
+
+        {/* 역 선택 모달 */}
+        <Modal
+          visible={stationModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setStationModalVisible(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalBox}>
+              <Text style={styles.modalTitle}>
+                {stationSelectMode === "origin" ? "출발역 선택" : "도착역 선택"}
+              </Text>
+              <FlatList
+                data={stations}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.modalItem}
+                    onPress={() => handleSelectStation(item.name)}
+                  >
+                    <Text>{item.name}</Text>
+                  </Pressable>
+                )}
+              />
+              <Pressable
+                style={styles.modalClose}
+                onPress={() => setStationModalVisible(false)}
+              >
+                <Text>닫기</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
+      </View>
+      <BottomNavigation activeTab="home" setActiveTab={setActiveTab} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 80, paddingHorizontal: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  content: {
+    flex: 1,
+    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+
   ticketTypeRow: { flexDirection: "row", marginBottom: 16 },
   ticketTypeButton: {
     flex: 1,

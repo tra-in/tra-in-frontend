@@ -10,6 +10,10 @@ import {
   Button,
 } from "react-native";
 import { API_BASE } from "../config/api";
+import ScreenHeader from "../components/ScreenHeader";
+import BottomNavigation from "../navigation/BottomNavigation";
+
+const DATE_OPTIONS = ["2025-12-16", "2025-12-17", "2025-12-18"];
 
 /** 날짜 문자열(YYYY-MM-DD)을 하루 뒤로 */
 function plusOneDay(dateStr) {
@@ -40,39 +44,21 @@ async function hasAnyTrain(origin, dest, baseDate) {
 }
 
 /* ==================== 열차 목록 컴포넌트 ==================== */
-function TrainList({ title, origin, dest, date, after, onSelect }) {
+function TrainList({ title, origin, dest, baseDate, after, onSelect }) {
+  const [selectedDate, setSelectedDate] = useState(baseDate); // 사용자가 선택한 날짜
   const [trains, setTrains] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [usedDate, setUsedDate] = useState(date); // 실제 사용한 날짜 (오늘/내일)
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setUsedDate(date);
 
     async function load() {
       try {
-        // 1차: 원래 날짜
-        let data = await searchOnce(origin, dest, date, after);
-        if (!cancelled && Array.isArray(data) && data.length > 0) {
-          setTrains(data);
-          setLoading(false);
-          return;
-        }
-
-        // 2차: 다음 날 (after는 의미 없으니 null)
-        const nextDate = plusOneDay(date);
-        data = await searchOnce(origin, dest, nextDate, null);
-        if (!cancelled && Array.isArray(data) && data.length > 0) {
-          setTrains(data);
-          setUsedDate(nextDate);
-          setLoading(false);
-          return;
-        }
-
-        // 둘 다 없으면 빈 배열
+        const data = await searchOnce(origin, dest, selectedDate, after);
         if (!cancelled) {
-          setTrains([]);
+          if (Array.isArray(data)) setTrains(data);
+          else setTrains([]);
           setLoading(false);
         }
       } catch (e) {
@@ -84,14 +70,14 @@ function TrainList({ title, origin, dest, date, after, onSelect }) {
       }
     }
 
-    if (origin && dest && date) {
+    if (origin && dest && selectedDate) {
       load();
     }
 
     return () => {
       cancelled = true;
     };
-  }, [origin, dest, date, after]);
+  }, [origin, dest, selectedDate, after]);
 
   if (loading) {
     return (
@@ -120,9 +106,35 @@ function TrainList({ title, origin, dest, date, after, onSelect }) {
 
   return (
     <View style={{ flex: 1 }}>
+      {/* 구간 제목 + 기준 날짜 */}
       <Text style={styles.stepTitle}>
-        {title} ({usedDate} 기준)
+        {title} ({selectedDate} 기준)
       </Text>
+
+      {/* 날짜 선택 칩(16/17/18) */}
+      <View style={styles.trainDateRow}>
+        {DATE_OPTIONS.map((d) => {
+          const active = d === selectedDate;
+          return (
+            <Pressable
+              key={d}
+              style={[styles.trainDateChip, active && styles.trainDateChipActive]}
+              onPress={() => setSelectedDate(d)}
+            >
+              <Text
+                style={[
+                  styles.trainDateChipText,
+                  active && styles.trainDateChipTextActive,
+                ]}
+              >
+                {d}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* 열차 리스트 */}
       <FlatList
         data={trains}
         keyExtractor={(item) => String(item.id)}
@@ -131,6 +143,13 @@ function TrainList({ title, origin, dest, date, after, onSelect }) {
       />
     </View>
   );
+}
+
+function formatMonthDay(dateTimeStr) {
+  if (!dateTimeStr) return "";
+  const month = dateTimeStr.slice(5, 7); // "12"
+  const day = dateTimeStr.slice(8, 10);  // "16"
+  return `${month}/${day}`;              // "12/16"
 }
 
 /* ==================== 좌석 선택 컴포넌트 ==================== */
@@ -311,74 +330,63 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
       setCurrentLegIndex(0);
       setStep("train");
     } else {
-        // hopper: 경유지 선택을 위해 역 목록 필요 + 1구간(출발지→경유1)에 열차 있는 역만 필터링
-        const baseDate = searchParams.date;
-        const originName = searchParams.originName;
+      // hopper: 경유지 선택을 위해 역 목록 필요 + 1구간(출발지→경유1)에 열차 있는 역만 필터링
+      const baseDate = searchParams.date;
+      const originName = searchParams.originName;
 
-        async function loadStations() {
-          try {
-            setValidatingWaypoints(true);
-            setWaypointError("");
-            setStations([]);
-            setWaypointPhase("first");
-            setWp1(null);
-            setWp2(null);
-            setWp2Candidates([]);
+      async function loadStations() {
+        try {
+          setValidatingWaypoints(true);
+          setWaypointError("");
+          setStations([]);
+          setWaypointPhase("first");
+          setWp1(null);
+          setWp2(null);
+          setWp2Candidates([]);
 
-            const res = await fetch(`${API_BASE}/stations`);
-            const data = await res.json();
+          const res = await fetch(`${API_BASE}/stations`);
+          const data = await res.json();
 
-            // 출발/도착 제외한 기본 역 목록
-            const baseList = data.filter(
-              (s) =>
-                s.name !== searchParams.originName &&
-                s.name !== searchParams.destName
-            );
+          // 출발/도착 제외한 기본 역 목록
+          const baseList = data.filter(
+            (s) =>
+              s.name !== searchParams.originName &&
+              s.name !== searchParams.destName
+          );
 
-            const firstCandidates = [];
+          const firstCandidates = [];
 
-            // ✅ 출발지 → 해당 역 구간에 (오늘/내일 기준) 열차가 있는 역만 남기기
-            for (const s of baseList) {
-              const ok = await hasAnyTrain(originName, s.name, baseDate);
-              if (ok) {
-                firstCandidates.push(s);
-              }
+          // 출발지 → 해당 역 구간에 (오늘/내일 기준) 열차가 있는 역만 남기기
+          for (const s of baseList) {
+            const ok = await hasAnyTrain(originName, s.name, baseDate);
+            if (ok) {
+              firstCandidates.push(s);
             }
-
-            setStations(firstCandidates);
-
-            if (firstCandidates.length === 0) {
-              setWaypointError(
-                "선택 가능한 경유지가 없습니다. 다른 출발/도착 역을 선택해 주세요."
-              );
-            }
-
-            setStep("waypoints");
-          } catch (e) {
-            console.error("stations for hopper error", e);
-            setWaypointError(
-              "경유지 후보를 불러오는 중 오류가 발생했습니다."
-            );
-          } finally {
-            setValidatingWaypoints(false);
           }
-        }
 
-        loadStations();
+          setStations(firstCandidates);
+
+          if (firstCandidates.length === 0) {
+            setWaypointError(
+              "선택 가능한 경유지가 없습니다. 다른 출발/도착 역을 선택해 주세요."
+            );
+          }
+
+          setStep("waypoints");
+        } catch (e) {
+          console.error("stations for hopper error", e);
+          setWaypointError("경유지 후보를 불러오는 중 오류가 발생했습니다.");
+        } finally {
+          setValidatingWaypoints(false);
+        }
       }
+
+      loadStations();
+    }
   }, [searchParams]);
 
-  if (!searchParams) {
-    return (
-      <View style={styles.center}>
-        <Text>홈 화면에서 먼저 조건을 선택해 주세요.</Text>
-        <Button title="홈으로" onPress={() => setActiveTab("home")} />
-      </View>
-    );
-  }
-
-  const date = searchParams.date;
-  const passengers = searchParams.passengers;
+  const date = searchParams?.date;
+  const passengers = searchParams?.passengers;
 
   const legs = useMemo(() => {
     const res = [];
@@ -423,7 +431,11 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         const okFromWp1 = await hasAnyTrain(name, s.name, baseDate);
         if (!okFromWp1) continue;
 
-        const okToDest = await hasAnyTrain(s.name, searchParams.destName, baseDate);
+        const okToDest = await hasAnyTrain(
+          s.name,
+          searchParams.destName,
+          baseDate
+        );
         if (!okToDest) continue;
 
         candidates.push(s.name);
@@ -459,11 +471,22 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
     setStep("train");
   };
 
-  /* ====== 화면 분기 ====== */
+  let body = null;
 
-  // 메뚜기 모드: 1번째 경유지 선택
-  if (mode === "hopper" && step === "waypoints" && waypointPhase === "first") {
-    return (
+  if (!searchParams) {
+    body = (
+      <View style={styles.center}>
+        <Text>홈 화면에서 먼저 조건을 선택해 주세요.</Text>
+        <Button title="홈으로" onPress={() => setActiveTab("home")} />
+      </View>
+    );
+  } else if (
+    mode === "hopper" &&
+    step === "waypoints" &&
+    waypointPhase === "first"
+  ) {
+    // 메뚜기: 1번째 경유지 선택
+    body = (
       <View style={styles.container}>
         <Text style={styles.title}>1번째 경유지 선택</Text>
         <Text style={styles.subtitle}>
@@ -490,11 +513,13 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         ) : null}
       </View>
     );
-  }
-
-  // 메뚜기 모드: 2번째 경유지 선택 (선택 안 해도 됨)
-  if (mode === "hopper" && step === "waypoints" && waypointPhase === "second") {
-    return (
+  } else if (
+    mode === "hopper" &&
+    step === "waypoints" &&
+    waypointPhase === "second"
+  ) {
+    // 메뚜기: 2번째 경유지 선택 (선택 안 해도 됨)
+    body = (
       <View style={styles.container}>
         <Text style={styles.title}>2번째 경유지 선택 (선택 안 해도 됨)</Text>
         <Text style={styles.subtitle}>
@@ -540,10 +565,8 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         </View>
       </View>
     );
-  }
-
-  // 2) 열차 선택 (직행 / 메뚜기 공통)
-  if (step === "train" && currentLeg) {
+  } else if (step === "train" && currentLeg) {
+    // 열차 선택
     const from = currentLeg.from;
     const to = currentLeg.to;
 
@@ -554,13 +577,13 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
       after = prevTrain ? prevTrain.arrivalTime : null;
     }
 
-    return (
+    body = (
       <View style={styles.container}>
         <TrainList
           title={`구간 ${currentLegIndex + 1}: ${from} → ${to}`}
           origin={from}
           dest={to}
-          date={date}
+          baseDate={date}
           after={after}
           onSelect={(train) => {
             const newTrains = [...selectedTrains];
@@ -571,12 +594,10 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         />
       </View>
     );
-  }
-
-  // 3) 좌석 선택
-  if (step === "seat") {
+  } else if (step === "seat") {
+    // 좌석 선택
     const train = selectedTrains[currentLegIndex];
-    return (
+    body = (
       <View style={styles.container}>
         <SeatSelect
           legTitle={`구간 ${currentLegIndex + 1} 좌석 선택`}
@@ -591,11 +612,9 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         />
       </View>
     );
-  }
-
-  // 4) 요약
-  if (step === "summary") {
-    return (
+  } else if (step === "summary") {
+    // 요약
+    body = (
       <View style={styles.container}>
         <Text style={styles.title}>
           {mode === "direct" ? "여행 요약 (직행)" : "여행 요약 (메뚜기)"}
@@ -617,7 +636,8 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
               </Text>
               <Text>
                 시간: {train.departureTime.slice(11, 16)} →{" "}
-                {train.arrivalTime.slice(11, 16)}
+                {train.arrivalTime.slice(11, 16)} (
+                {formatMonthDay(train.departureTime)})
               </Text>
               <Text>
                 좌석: {seat.carNo}호차 {seat.seatCode}
@@ -654,19 +674,41 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         </View>
       </View>
     );
+  } else {
+    // 안전용
+    body = (
+      <View style={styles.center}>
+        <ActivityIndicator />
+      </View>
+    );
   }
 
-  // 안전용
   return (
-    <View style={styles.center}>
-      <ActivityIndicator />
+    <View style={styles.pageContainer}>
+      <ScreenHeader
+        title="트레:in(人)"
+        showBackButton={true}
+        onBackPress={() => setActiveTab("home")}
+      />
+      {body}
+      <BottomNavigation activeTab="booking" setActiveTab={setActiveTab} />
     </View>
   );
 }
 
 /* ==================== 스타일 ==================== */
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, paddingHorizontal: 24 },
+  // 바깥 전체
+  pageContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  // 화면 본문(헤더 아래에 붙는 영역)
+  container: {
+    flex: 1,
+    paddingTop: 16,
+    paddingHorizontal: 24,
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 8 },
@@ -740,4 +782,54 @@ const styles = StyleSheet.create({
     backgroundColor: "#0A84FF11",
   },
   sectionTitle: { fontSize: 16, fontWeight: "600" },
+
+    trainDateRow: {
+      flexDirection: "row",
+      gap: 8,
+      marginBottom: 8,
+    },
+    trainDateChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#ddd",
+    },
+    trainDateChipActive: {
+      borderColor: "#0A84FF",
+      backgroundColor: "#0A84FF11",
+    },
+    trainDateChipText: {
+      fontSize: 12,
+      color: "#555",
+    },
+    trainDateChipTextActive: {
+      color: "#0A84FF",
+      fontWeight: "bold",
+    },
+
+     trainDateRow: {
+       flexDirection: "row",
+       gap: 8,
+       marginBottom: 8,
+     },
+     trainDateChip: {
+       paddingHorizontal: 10,
+       paddingVertical: 4,
+       borderRadius: 12,
+       borderWidth: 1,
+       borderColor: "#ddd",
+     },
+     trainDateChipActive: {
+       borderColor: "#0A84FF",
+       backgroundColor: "#0A84FF11",
+     },
+     trainDateChipText: {
+       fontSize: 12,
+       color: "#555",
+     },
+     trainDateChipTextActive: {
+       color: "#0A84FF",
+       fontWeight: "bold",
+     },
 });
