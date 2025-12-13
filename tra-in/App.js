@@ -19,6 +19,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [searchParams, setSearchParams] = useState(null);
   const [activeScreen, setActiveScreen] = useState(null);
+  const [selectedSegment, setSelectedSegment] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
@@ -83,6 +84,7 @@ export default function App() {
         <AiRecommendDetailScreen
           setActiveTab={setActiveTab}
           setActiveScreen={setActiveScreen}
+          segment={selectedSegment ?? "부산 - 대전"}
         />
       );
     }
@@ -96,6 +98,7 @@ export default function App() {
           <TravelScreen
             setActiveTab={setActiveTab}
             setActiveScreen={setActiveScreen}
+            setSelectedSegment={setSelectedSegment}
           />
         );
       case "reservationList":

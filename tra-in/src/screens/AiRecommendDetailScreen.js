@@ -10,6 +10,10 @@ import {
 } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import { screenStyles } from "../constants/screenStyles";
+import WaypointCard from "../components/WaypointCard";
+import WaypointActionButton from "../components/WaypointActionButton";
+import { Colors } from "../constants/theme";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -73,10 +77,53 @@ const waypoints = [
   },
 ];
 
+// 예시: 모달에서 받은 구간 정보 props로 받기
 export default function AiRecommendDetailScreen({
   setActiveTab,
   setActiveScreen,
+  segment = "부산 - 대전",
+  waypoints: propWaypoints,
 }) {
+  // 실제로는 propWaypoints를 받아야 함. 없으면 기존 더미 사용
+  const waypoints = propWaypoints || [
+    {
+      number: 1,
+      type: "기차역",
+      title: "대전역",
+      desc: "기차역 | 대전 동구 중앙로 215",
+    },
+    {
+      number: 2,
+      type: "맛집/카페",
+      title: "김화칼국수",
+      desc: "맛집/카페 | 대전 동구 중앙로203번길 28",
+    },
+    {
+      number: 3,
+      type: "맛집/카페",
+      title: "꿈틀",
+      desc: "맛집/카페 | 대전 동구 중앙로203번길 5",
+    },
+    {
+      number: 4,
+      type: "관광",
+      title: "꿈돌이하우스",
+      desc: "관광 | 대전 동구 중앙로203번길 3",
+    },
+    {
+      number: 5,
+      type: "관광",
+      title: "대전트래블라운지",
+      desc: "관광 | 대전 동구 중앙로 187-1",
+    },
+    {
+      number: 6,
+      type: "맛집/카페",
+      title: "미들커피",
+      desc: "맛집/카페 | 대전 동구 대전로797번길 46",
+    },
+  ];
+
   const handleBack = () => {
     if (setActiveTab) setActiveTab("travel");
     if (setActiveScreen) setActiveScreen(null);
@@ -90,98 +137,45 @@ export default function AiRecommendDetailScreen({
         onBackPress={handleBack}
       />
       <View style={styles.container}>
-        {/* 지도 영역 */}
+        {/* 지도 영역: 카카오맵 API로 대체 예정 */}
         <View style={styles.mapWrap}>
-          <Image
-            source={{ uri: imgMap }}
-            style={styles.mapImg}
-            resizeMode="cover"
-          />
+          {/* TODO: 카카오맵 뷰로 교체 */}
+          <View
+            style={[
+              styles.mapImg,
+              {
+                backgroundColor: Colors.korailSilver,
+                justifyContent: "center",
+                alignItems: "center",
+              },
+            ]}
+          >
+            <Text style={{ color: Colors.korailGray }}>[카카오맵 영역]</Text>
+          </View>
           <View style={styles.routeSummary}>
             <Image source={{ uri: imgAvatar }} style={styles.avatarSmall} />
-            <Text style={styles.routeText}>부산 - 대전</Text>
-          </View>
-          {/* 번호 마커들 (예시, 실제 위치는 absolute로 조정 필요) */}
-          <View
-            style={[
-              styles.marker,
-              { left: 266, top: 99, backgroundColor: "#005db3" },
-            ]}
-          >
-            <Text style={styles.markerText}>1</Text>
-          </View>
-          <View
-            style={[
-              styles.marker,
-              { left: 126, top: 53, backgroundColor: "#ff81b9" },
-            ]}
-          >
-            <Text style={styles.markerText}>2</Text>
-          </View>
-          <View
-            style={[
-              styles.marker,
-              { left: 162, top: 145, backgroundColor: "#ff81b9" },
-            ]}
-          >
-            <Text style={styles.markerText}>3</Text>
-          </View>
-          <View
-            style={[
-              styles.marker,
-              { left: 174, top: 162, backgroundColor: "#ac8f39" },
-            ]}
-          >
-            <Text style={styles.markerText}>4</Text>
-          </View>
-          <View
-            style={[
-              styles.marker,
-              { left: 38, top: 209, backgroundColor: "#ac8f39" },
-            ]}
-          >
-            <Text style={styles.markerText}>5</Text>
-          </View>
-          <View
-            style={[
-              styles.marker,
-              { left: 74, top: 269, backgroundColor: "#ff81b9" },
-            ]}
-          >
-            <Text style={styles.markerText}>6</Text>
+            <Text style={styles.routeText}>{segment}</Text>
           </View>
         </View>
-        {/* 세부 일정 섹션 */}
+        {/* 경유지 리스트 헤더 + 편집 아이콘 */}
+        <View style={styles.listHeaderRow}>
+          <View style={{ flex: 1 }} />
+          <TouchableOpacity style={styles.editBtn}>
+            <MaterialIcons name="edit" size={22} color={Colors.korailGray} />
+          </TouchableOpacity>
+        </View>
+        {/* 경유지 카드 + 길찾기 버튼 */}
         <ScrollView
           style={styles.detailSection}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
           {waypoints.map((wp, idx) => (
-            <View key={wp.number} style={styles.waypointCard}>
-              <View
-                style={[
-                  styles.marker,
-                  {
-                    left: 17,
-                    top: 16,
-                    backgroundColor: wp.color,
-                    position: "absolute",
-                  },
-                ]}
-              >
-                <Text style={styles.markerText}>{wp.number}</Text>
-              </View>
-              <View
-                style={{
-                  marginLeft: 68,
-                  paddingVertical: 6,
-                  paddingHorizontal: 10,
-                }}
-              >
-                <Text style={styles.waypointTitle}>{wp.title}</Text>
-                <Text style={styles.waypointDesc}>{wp.desc}</Text>
-              </View>
-            </View>
+            <WaypointCard
+              key={wp.number}
+              {...wp}
+              showDivider
+              onDirectionsPress={() => {}}
+            />
           ))}
         </ScrollView>
       </View>
@@ -280,5 +274,15 @@ const styles = StyleSheet.create({
     color: "#77777a",
     fontWeight: "500",
     marginTop: 2,
+  },
+  listHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    width: 332,
+    marginBottom: 2,
+  },
+  editBtn: {
+    padding: 6,
   },
 });
