@@ -221,17 +221,19 @@ const TravelScreen = ({ setActiveTab }) => {
           <View
             style={[
               styles.sectionHeader,
-              { paddingRight: 24 * scale, paddingLeft: 24 * scale },
+              { paddingRight: 15 * scale, paddingLeft: 24 * scale },
             ]}
           >
             <Text style={[styles.sectionTitle, { fontSize: 18 * scale }]}>
               많은 트레인이 만족한 명소
             </Text>
             <TouchableOpacity>
-              <Text style={[styles.chevron, { fontSize: 20 * scale }]}>
-                {" "}
-                {">"}
-              </Text>
+              <MaterialIcons
+                name="chevron-right"
+                size={24 * scale}
+                color={Colors.korailGray}
+                style={{ marginLeft: 4 * scale }}
+              />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -294,17 +296,19 @@ const TravelScreen = ({ setActiveTab }) => {
           <View
             style={[
               styles.sectionHeader,
-              { paddingRight: 24 * scale, paddingLeft: 24 * scale },
+              { paddingRight: 15 * scale, paddingLeft: 24 * scale },
             ]}
           >
             <Text style={[styles.sectionTitle, { fontSize: 18 * scale }]}>
               오늘은 뭐 먹지? 대전 맛집 추천
             </Text>
             <TouchableOpacity>
-              <Text style={[styles.chevron, { fontSize: 20 * scale }]}>
-                {" "}
-                {">"}
-              </Text>
+              <MaterialIcons
+                name="chevron-right"
+                size={24 * scale}
+                color={Colors.korailGray}
+                style={{ marginLeft: 4 * scale }}
+              />
             </TouchableOpacity>
           </View>
           <ScrollView
