@@ -73,7 +73,14 @@ export default function App() {
       case "records":
         return <RecordsScreen setActiveTab={setActiveTab} setActiveScreen={setActiveScreen} />;
       case "profile":
-        return <MyTicketsScreen setActiveTab={setActiveTab} />;
+        return (
+          <MyTicketsScreen 
+            setActiveTab={setActiveTab} 
+            setActiveScreen={setActiveScreen}
+            setSelectedReservation={setSelectedReservation}
+            setSelectedBadge={setSelectedBadge}
+          />
+        );
       default:
         return <HomeScreen setActiveTab={setActiveTab} />;
     }
