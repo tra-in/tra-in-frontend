@@ -14,6 +14,8 @@ import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing, BorderRadius } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
+import PlaceCard from "../components/PlaceCard";
+import TravelPlanCard from "../components/TravelPlanCard";
 
 // Figma image assets (replace with actual URLs or local assets as needed)
 const places1 = [
@@ -110,97 +112,17 @@ const TravelScreen = ({ setActiveTab }) => {
 
         {/* 여행 계획 카드 */}
         <View style={[styles.planCardWrapper, { width: windowWidth }]}>
-          <View
-            style={[styles.planCard, { width: cardWidth, height: cardHeight }]}
-          >
-            <View style={styles.planCardTextWrap}>
-              <Text style={[styles.greeting, { fontSize: 13 * scale }]}>
-                홍길동님,
-              </Text>
-              <Text style={[styles.planTitle, { fontSize: 20 * scale }]}>
-                대전 여행을 계획하고 있나요?
-              </Text>
-            </View>
-            <Image
-              source={{ uri: avatar }}
-              style={[
-                styles.avatar,
-                {
-                  width: avatarSize,
-                  height: avatarSize,
-                  borderRadius: avatarSize / 2,
-                  left: 25 * scale,
-                  top: 88 * scale,
-                },
-              ]}
-            />
-            <View
-              style={[
-                styles.planInfoWrap,
-                {
-                  left: 95 * scale,
-                  top: 88 * scale,
-                  width: 216 * scale,
-                  // height: 60 * scale, // 높이 고정 제거
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.planRoute,
-                  { fontSize: 15 * scale, marginBottom: 2 * scale },
-                ]}
-              >
-                부산 - 대전
-              </Text>
-              <Text
-                style={[
-                  styles.planDate,
-                  {
-                    fontSize: 13 * scale,
-                    marginTop: 0,
-                    marginBottom: 2 * scale,
-                  },
-                ]}
-              >
-                2025.12.15 (월)
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.aiButton,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    borderRadius: 7 * scale,
-                    paddingHorizontal: 3 * scale,
-                    paddingVertical: 4 * scale,
-                    marginTop: 4 * scale,
-                    marginBottom: 14 * scale,
-                    alignSelf: "flex-start",
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.aiButtonText,
-                    {
-                      fontSize: 13 * scale,
-                      marginRight: 2 * scale,
-                      paddingLeft: 7 * scale,
-                    },
-                  ]}
-                >
-                  AI 추천 일정
-                </Text>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={18 * scale}
-                  color="#FF81B9"
-                  style={{ marginRight: 0 }}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
+          <TravelPlanCard
+            userName="홍길동"
+            title="대전 여행을 계획하고 있나요?"
+            avatar={avatar}
+            route="부산 - 대전"
+            date="2025.12.15 (월)"
+            scale={scale}
+            cardWidth={cardWidth}
+            cardHeight={cardHeight}
+            avatarSize={avatarSize}
+          />
           <Text
             style={[
               styles.selectOtherTrip,
@@ -247,41 +169,13 @@ const TravelScreen = ({ setActiveTab }) => {
             decelerationRate="fast"
           >
             {places1.map((place, idx) => (
-              <View
+              <PlaceCard
                 key={idx}
-                style={[
-                  styles.placeCard,
-                  { width: placeCardWidth, marginRight: 8 * scale },
-                ]}
-              >
-                <Image
-                  source={{ uri: place.image }}
-                  style={[
-                    styles.placeImage,
-                    {
-                      width: placeCardWidth,
-                      height: placeImageHeight,
-                      borderRadius: 12 * scale,
-                    },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.placeName,
-                    { fontSize: 15 * scale, marginLeft: 2 * scale },
-                  ]}
-                >
-                  {place.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.placeRegion,
-                    { fontSize: 12 * scale, marginLeft: 2 * scale },
-                  ]}
-                >
-                  {place.region}
-                </Text>
-              </View>
+                place={place}
+                width={placeCardWidth}
+                imageHeight={placeImageHeight}
+                scale={scale}
+              />
             ))}
           </ScrollView>
         </View>
@@ -322,41 +216,13 @@ const TravelScreen = ({ setActiveTab }) => {
             decelerationRate="fast"
           >
             {places2.map((place, idx) => (
-              <View
+              <PlaceCard
                 key={idx}
-                style={[
-                  styles.placeCard,
-                  { width: placeCardWidth, marginRight: 8 * scale },
-                ]}
-              >
-                <Image
-                  source={{ uri: place.image }}
-                  style={[
-                    styles.placeImage,
-                    {
-                      width: placeCardWidth,
-                      height: placeImageHeight,
-                      borderRadius: 12 * scale,
-                    },
-                  ]}
-                />
-                <Text
-                  style={[
-                    styles.placeName,
-                    { fontSize: 15 * scale, marginLeft: 2 * scale },
-                  ]}
-                >
-                  {place.name}
-                </Text>
-                <Text
-                  style={[
-                    styles.placeRegion,
-                    { fontSize: 12 * scale, marginLeft: 2 * scale },
-                  ]}
-                >
-                  {place.region}
-                </Text>
-              </View>
+                place={place}
+                width={placeCardWidth}
+                imageHeight={placeImageHeight}
+                scale={scale}
+              />
             ))}
           </ScrollView>
         </View>
