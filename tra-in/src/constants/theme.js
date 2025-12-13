@@ -5,6 +5,8 @@ export const Colors = {
   korailGray: "#77777A",
   korailSilver: "#D9D9D9",
   korailLemon: "#FFFCE3",
+  korailHotPink: "#FF81B9",
+  korailGold: "#AC8F39",
   white: "#FFFFFF",
   black: "#000000",
   neutralGray: "#F5F5F5",
