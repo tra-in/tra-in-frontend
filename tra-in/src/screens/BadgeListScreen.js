@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, SafeAreaView, ScrollView, StyleSheet, Alert } from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Spacing, Colors } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -87,7 +88,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
     <SafeAreaView style={screenStyles.container}>
       <ScreenHeader 
         showBackButton={true}
-        onBackPress={() => setActiveTab("travel")}
+        onBackPress={() => setActiveTab("profile")}
       />
 
       <ScrollView
@@ -122,7 +123,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
         </View>
       </ScrollView>
 
-      <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
+      <BottomNavigation activeTab="profile" setActiveTab={setActiveTab}/>
 
       {/* 지역 선택 모달 */}
       <RegionPickerModal
