@@ -13,9 +13,11 @@ import BadgeCompletedScreen from "./src/screens/BadgeCompletedScreen";
 import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
 import CameraChatScreen from "./src/screens/CameraChatScreen";
+import BookingScreen from "./src/screens/BookingScreen";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
+  const [searchParams, setSearchParams] = useState(null);
   const [activeScreen, setActiveScreen] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
