@@ -88,7 +88,11 @@ const places2 = [
 const avatar =
   "http://10.0.2.2:3845/assets/1b5860a0f6bb3a218b4940d0f285a1ed9260ca16.png";
 
-const TravelScreen = ({ setActiveTab }) => {
+const TravelScreen = ({
+  setActiveTab,
+  setActiveScreen,
+  setSelectedSegment,
+}) => {
   const { width: windowWidth } = useWindowDimensions();
   // 기준 디자인이 375px(iPhone 13 mini)라면, 비율로 환산
   const baseWidth = 375;
@@ -117,9 +121,17 @@ const TravelScreen = ({ setActiveTab }) => {
     setStopoverModalVisible(false);
 
     const segment =
-      legKey === "LEG1" ? `${trip.from}-${trip.via}` : `${trip.via}-${trip.to}`;
+      legKey === "LEG1"
+        ? `${trip.from} - ${trip.via}`
+        : `${trip.via} - ${trip.to}`;
+    setSelectedSegment?.(segment);
 
-    console.log("선택 구간:", legKey, segment);
+    // 실제 네비게이션: 새 화면으로 이동
+    if (setActiveScreen) {
+      setActiveScreen("aiRecommendDetail");
+    }
+    // const segment = legKey === "LEG1" ? `${trip.from}-${trip.via}` : `${trip.via}-${trip.to}`;
+    // console.log("선택 구간:", legKey, segment);
   };
 
   // 카드/섹션 등 주요 요소의 가로 크기 동적 계산
