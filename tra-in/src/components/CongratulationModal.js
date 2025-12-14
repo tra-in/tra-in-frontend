@@ -1,13 +1,32 @@
+
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from "react-native";
 import { Colors, Spacing, BorderRadius } from "../constants/theme";
+import { REGION_INFO } from "../constants/badgeConstants";
 
 /**
  * 뱃지 완료시 축하 팝업 모달
  * @param {string} region - 완료된 지역명
  * @param {function} onClose - 닫기 핸들러
  */
+const CONGRATS_DATA = {
+  "대전 중구": {
+    image: require("../../assets/daejeon_joonggu.png"),
+    sub: "다 머겄슈~!",
+  },
+  "강원 춘천시": {
+    image: require("../../assets/gangwon_chooncheon.png"),
+    sub: "다 묵었드래요~!",
+  },
+  "부산 수영구": {
+    image: require("../../assets/busan_sooyeonggu.png"),
+    sub: "다 묵어뿟다~!",
+  },
+};
+
 const CongratulationModal = ({ region, onClose }) => {
+  const info = CONGRATS_DATA[region] || {};
+  const regionInfo = REGION_INFO[region];
   return (
     <Modal
       transparent={true}
@@ -22,14 +41,16 @@ const CongratulationModal = ({ region, onClose }) => {
       >
         <View style={styles.modalContainer}>
           <Text style={styles.region}>{region}</Text>
-          
-          {/* 완료 이미지 영역 - 빵 일러스트 (TODO: 실제 이미지로 교체) */}
-          <View style={styles.imagePlaceholder}>
-            <Text style={styles.imageText}>🍞</Text>
-          </View>
-          
-          <Text style={styles.congratsText}>축하드립니다!</Text>
-          <Text style={styles.subText}>다 머겄슈~!</Text>
+          {/* 지역별 이미지 */}
+          {info.image ? (
+            <Image source={info.image} style={styles.imagePlaceholder} resizeMode="contain" />
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imageText}>🎉</Text>
+            </View>
+          )}
+          <Text style={styles.congratsText}>{info.message || "축하드립니다!"}</Text>
+          <Text style={styles.subText}>{info.sub || "여행을 모두 완료했어요!"}</Text>
         </View>
       </TouchableOpacity>
     </Modal>
@@ -45,7 +66,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: 333,
-    height: 218,
+    height: 230,
     backgroundColor: Colors.white,
     borderRadius: 44,
     paddingVertical: 15,
@@ -58,7 +79,6 @@ const styles = StyleSheet.create({
     color: "#888",
     fontFamily: "System",
     textAlign: "center",
-    marginTop: 5,
   },
   imagePlaceholder: {
     width: 120,
@@ -81,6 +101,7 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: "System",
     textAlign: "center",
+    marginBottom: 10,
   },
 });
 

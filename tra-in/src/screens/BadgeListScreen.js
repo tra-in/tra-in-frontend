@@ -13,7 +13,7 @@ import { generateDummyBadges } from "../data/dummyBadges";
 import { getDisplayRegionName, getDateRangeText, getMainRegion } from "../constants/badgeConstants";
 
 const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) => {
-  const [selectedRegion, setSelectedRegion] = useState("대전광역시");
+  const [selectedRegion, setSelectedRegion] = useState("전체");
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [showBadgeMenu, setShowBadgeMenu] = useState(false);
   const [selectedBadgeForMenu, setSelectedBadgeForMenu] = useState(null);
@@ -26,12 +26,14 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
    * 선택한 지역에 해당하는 뱃지만 필터링
    * 뱃지의 regions 배열에서 하나라도 선택한 지역에 속하면 포함
    */
-  const filteredBadges = allBadges.filter(badge => {
-    return badge.regions.some(region => {
-      const mainRegion = getMainRegion(region);
-      return mainRegion === selectedRegion;
-    });
-  });
+  const filteredBadges = selectedRegion === "전체"
+    ? allBadges
+    : allBadges.filter(badge => {
+        return badge.regions.some(region => {
+          const mainRegion = getMainRegion(region);
+          return mainRegion === selectedRegion;
+        });
+      });
 
   /**
    * 뱃지 클릭 핸들러
