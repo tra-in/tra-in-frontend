@@ -2,23 +2,22 @@ import React, { useState } from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
   useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ 변경
 import { MaterialIcons } from "@expo/vector-icons";
 import { screenStyles } from "../constants/screenStyles";
-import { Colors, Spacing, BorderRadius } from "../constants/theme";
+import { Colors } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 import PlaceCard from "../components/PlaceCard";
 import TravelPlanCard from "../components/TravelPlanCard";
 import StopoverSelectModal from "../components/StopoverSelectModal";
 
-// Figma image assets (replace with actual URLs or local assets as needed)
+// Figma image assets
 const places1 = [
   {
     name: "한밭수목원",
@@ -94,6 +93,7 @@ const TravelScreen = ({
   setSelectedSegment,
 }) => {
   const { width: windowWidth } = useWindowDimensions();
+
   // 기준 디자인이 375px(iPhone 13 mini)라면, 비율로 환산
   const baseWidth = 375;
   const scale = windowWidth / baseWidth;
@@ -104,7 +104,7 @@ const TravelScreen = ({
 
   // 모달 상태
   const [stopoverModalVisible, setStopoverModalVisible] = useState(false);
-  const [selectedLeg, setSelectedLeg] = useState("LEG1"); // 기본 선택
+  const [selectedLeg, setSelectedLeg] = useState("LEG1");
 
   // AI 추천 일정 버튼 클릭
   const handleAiPress = () => {
@@ -112,31 +112,24 @@ const TravelScreen = ({
       setStopoverModalVisible(true);
       return;
     }
-    // 경유지 없으면 바로 추천 진행(지금은 더미)
     console.log("추천 진행:", `${trip.from}-${trip.to}`);
   };
 
   // 모달에서 확인 클릭
   const handleConfirmLeg = (legKey) => {
     console.log("CONFIRM LEG:", legKey);
-    console.log("setActiveScreen is function?", typeof setActiveScreen);
-
     setStopoverModalVisible(false);
 
     const segment =
       legKey === "LEG1"
         ? `${trip.from} - ${trip.via}`
         : `${trip.via} - ${trip.to}`;
+
     setSelectedSegment?.(segment);
 
-    console.log("GO AI DETAIL NOW");
-
-    // 실제 네비게이션: 새 화면으로 이동
     if (setActiveScreen) {
       setActiveScreen("aiRecommendDetail");
     }
-    // const segment = legKey === "LEG1" ? `${trip.from}-${trip.via}` : `${trip.via}-${trip.to}`;
-    // console.log("선택 구간:", legKey, segment);
   };
 
   // 카드/섹션 등 주요 요소의 가로 크기 동적 계산
@@ -147,15 +140,14 @@ const TravelScreen = ({
   const placeImageHeight = Math.round(159 * scale);
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <SafeAreaView style={screenStyles.container} edges={[]}>
+      <ScreenHeader />
+
       <ScrollView
         style={screenStyles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
       >
-        {/* 헤더 */}
-        <ScreenHeader title="트레:in(人)" />
-
         {/* 여행 계획 카드 */}
         <View style={[styles.planCardWrapper, { width: windowWidth }]}>
           <TravelPlanCard
@@ -205,6 +197,7 @@ const TravelScreen = ({
               />
             </TouchableOpacity>
           </View>
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -252,6 +245,7 @@ const TravelScreen = ({
               />
             </TouchableOpacity>
           </View>
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -274,6 +268,8 @@ const TravelScreen = ({
           </ScrollView>
         </View>
       </ScrollView>
+
+      {/* 모달 */}
       <StopoverSelectModal
         visible={stopoverModalVisible}
         scale={scale}
@@ -284,6 +280,7 @@ const TravelScreen = ({
         onConfirm={() => handleConfirmLeg(selectedLeg)}
       />
 
+      {/* 하단 탭 */}
       <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
     </SafeAreaView>
   );
@@ -292,96 +289,10 @@ const TravelScreen = ({
 const styles = StyleSheet.create({
   planCardWrapper: {
     marginTop: 24,
-    marginBottom: 24, // 아래 섹션과 간격을 넉넉히
+    marginBottom: 24,
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 16, // 좌우 여백 추가
-  },
-  planCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 30,
-    width: 332,
-    height: 188,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    paddingHorizontal: 20, // 좌우 패딩 증가
-    paddingTop: 18,
-    paddingBottom: 18,
-    flexDirection: "column",
-    alignItems: "flex-start",
-    position: "relative",
-  },
-  planCardTextWrap: {
-    width: "100%",
-    marginBottom: 7,
-    paddingLeft: 3,
-  },
-  greeting: {
-    fontSize: 13,
-    color: Colors.korailGray,
-    marginBottom: 2,
-    fontWeight: "400",
-  },
-  planTitle: {
-    fontSize: 20,
-    color: Colors.black,
-    fontWeight: "bold",
-    textAlign: "left",
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    position: "absolute",
-    left: 25,
-    top: 96,
-    borderWidth: 1,
-    borderColor: Colors.korailSilver,
-    backgroundColor: Colors.white,
-  },
-  planInfoWrap: {
-    position: "absolute",
-    left: 94,
-    top: 88, // 더 위로 올림
-    width: 216,
-    // height: 60, // 높이 고정 제거
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-    backgroundColor: "transparent",
-    // gap: 2, // gap 제거
-  },
-  planDate: {
-    fontSize: 13,
-    color: Colors.korailGray,
-    textAlign: "center",
-    marginBottom: 2,
-    fontWeight: "400",
-  },
-  planRoute: {
-    fontSize: 15,
-    color: Colors.black,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  aiButton: {
-    backgroundColor: "#fbe8efff",
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "center",
-    marginTop: 4,
-    // marginBottom은 인라인에서 조정
-  },
-  aiButtonText: {
-    color: "#FF81B9",
-    fontSize: 12,
-    fontWeight: "bold",
+    paddingHorizontal: 16,
   },
   selectOtherTrip: {
     color: Colors.korailGray,
@@ -392,9 +303,9 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   sectionWrap: {
-    marginTop: 0, // 카드와 맞추기 위해 위쪽 마진 제거
-    marginBottom: 24, // 아래쪽 넉넉히
-    paddingHorizontal: 16, // 카드와 동일한 좌우 패딩
+    marginTop: 0,
+    marginBottom: 24,
+    paddingHorizontal: 16,
     width: "100%",
   },
   sectionHeader: {
@@ -410,45 +321,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontWeight: "600",
     letterSpacing: -0.5,
-  },
-  chevron: {
-    fontSize: 20,
-    color: Colors.korailGray,
-    marginLeft: 4,
-    fontWeight: "600",
-  },
-  placeCard: {
-    width: 154,
-    marginRight: 8,
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 6,
-    alignItems: "flex-start",
-    // shadow 제거 (피그마와 동일하게)
-    shadowColor: undefined,
-    shadowOffset: undefined,
-    shadowOpacity: undefined,
-    shadowRadius: undefined,
-    elevation: 0,
-  },
-  placeImage: {
-    width: 154,
-    height: 159,
-    borderRadius: 12,
-    marginBottom: 3,
-    backgroundColor: Colors.korailSilver,
-  },
-  placeName: {
-    fontSize: 15,
-    color: Colors.black,
-    fontWeight: "600",
-    marginBottom: 1,
-    marginLeft: 2,
-  },
-  placeRegion: {
-    fontSize: 12,
-    color: Colors.korailGray,
-    marginLeft: 2,
   },
 });
 
