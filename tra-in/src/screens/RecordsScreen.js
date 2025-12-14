@@ -1,13 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Text, 
-  View, 
-  SafeAreaView, 
-  StyleSheet, 
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator
-} from "react-native";
+import { Text, View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator} from "react-native";
 import { screenStyles } from "../constants/screenStyles";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ImageBackground } from "react-native";
-// import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { screenStyles } from "../constants/screenStyles";
 import { Ionicons } from '@expo/vector-icons';
 import ScreenHeader from "../components/ScreenHeader";
