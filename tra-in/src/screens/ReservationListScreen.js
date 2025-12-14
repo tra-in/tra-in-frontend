@@ -1,11 +1,6 @@
 import React from "react";
-import {
-  Text,
-  View,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {Text, View, SafeAreaView, ScrollView, StyleSheet} from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -23,7 +18,7 @@ const ReservationListScreen = ({ setActiveTab, setActiveScreen, setSelectedReser
     <SafeAreaView style={screenStyles.container}>
       <ScreenHeader
         showBackButton={true}
-        title="예약 목록"
+        // title="예약 목록"
         onBackPress={() => setActiveTab("profile")}
       />
       <ScrollView

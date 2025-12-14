@@ -15,13 +15,14 @@ import PlaceListItem from "../components/PlaceListItem";
  * @param {function} setSelectedPlace - 선택된 장소 설정 함수
  * @param {object} badge - 뱃지(여행) 데이터
  */
-const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge }) => {
+const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, badge, setPreviousScreen}) => {
   /**
    * 장소 정렬: 미방문 장소가 위로, 방문 완료한 장소는 아래로
    */
   const unvisitedPlaces = badge.places.filter(place => !place.visited);
   const visitedPlaces = badge.places.filter(place => place.visited);
   const sortedPlaces = [...unvisitedPlaces, ...visitedPlaces];
+  
 
   /**
    * 뒤로가기 핸들러
@@ -66,13 +67,23 @@ const BadgeDetailScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace, ba
               key={place.id}
               place={place}
               showStatus={true}
-              onPress={() => handlePlacePress(place)}
+              onPress={() => {
+                setPreviousScreen("badgeDetail");
+                setSelectedPlace(place);
+                setActiveScreen("placeDetail");
+              }}
             />
           ))}
         </ScrollView>
       </View>
 
-      <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
+      <BottomNavigation 
+        activeTab="profile" 
+        setActiveTab={(tab) => {
+          setActiveScreen(null);
+          setActiveTab(tab);
+        }}
+      />
     </SafeAreaView>
   );
 };

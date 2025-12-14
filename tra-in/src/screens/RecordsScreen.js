@@ -13,7 +13,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 import * as Location from 'expo-location';
 
-const RecordsScreen = ({ setActiveTab }) => {
+const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
   const [address, setAddress] = useState('위치를 가져오는 중...');
   const [loading, setLoading] = useState(true);
 
@@ -97,7 +97,12 @@ const RecordsScreen = ({ setActiveTab }) => {
   }, []);
 
   const handleCameraPress = () => {
-    Alert.alert('카메라', '카메라 기능을 실행합니다');
+    // 카메라 버튼을 누르면 CameraChatScreen으로 이동합니다.
+    if (typeof setActiveScreen === 'function') {
+      setActiveScreen('cameraChat');
+    } else {
+      Alert.alert('카메라', '화면 전환이 불가능합니다');
+    }
   };
 
   return (
