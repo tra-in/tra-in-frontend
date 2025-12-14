@@ -38,13 +38,15 @@ export default function App() {
     }
     // 장소 상세 화면
     if (activeScreen === "placeDetail" && selectedPlace) {
-      return <PlaceDetailScreen 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab} 
-        setActiveScreen={setActiveScreen} 
-        place={selectedPlace}
-        previousScreen={previousScreen}
-      />;
+      return (
+        <PlaceDetailScreen
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          setActiveScreen={setActiveScreen}
+          place={selectedPlace}
+          previousScreen={previousScreen}
+        />
+      );
     }
     // 카메라 채팅 화면
     if (activeScreen === "cameraChat") {
@@ -58,24 +60,41 @@ export default function App() {
     }
     // 뱃지 상세 화면 우선 처리
     if (activeScreen === "badgeDetail" && selectedBadge) {
-      return <BadgeDetailScreen
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      setActiveScreen={setActiveScreen}
-      setSelectedPlace={setSelectedPlace}
-      badge={selectedBadge} 
-      setPreviousScreen={setPreviousScreen}
-      />;
+      return (
+        <BadgeDetailScreen
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          setActiveScreen={setActiveScreen}
+          setSelectedPlace={setSelectedPlace}
+          badge={selectedBadge}
+          setPreviousScreen={setPreviousScreen}
+        />
+      );
     }
     if (activeScreen === "badgeCompleted" && selectedBadge) {
-      return <BadgeCompletedScreen 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab} 
-      setActiveScreen={setActiveScreen} 
-      setSelectedPlace={setSelectedPlace} 
-      badge={selectedBadge} 
-      setPreviousScreen={setPreviousScreen}
-      />;
+      return (
+        <BadgeCompletedScreen
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          setActiveScreen={setActiveScreen}
+          setSelectedPlace={setSelectedPlace}
+          badge={selectedBadge}
+          setPreviousScreen={setPreviousScreen}
+        />
+      );
+    }
+
+    if (activeScreen === "aiRecommendDetail") {
+      const AiRecommendDetailScreen =
+        require("./src/screens/AiRecommendDetailScreen").default;
+
+      return (
+        <AiRecommendDetailScreen
+          setActiveTab={setActiveTab}
+          setActiveScreen={setActiveScreen}
+          segment={selectedSegment ?? "부산 - 대전"}
+        />
+      );
     }
 
     // 기본 탭 화면
@@ -108,23 +127,23 @@ export default function App() {
           />
         );
       case "records":
-        return <RecordsScreen 
-        setActiveTab={setActiveTab} 
-        setActiveScreen={setActiveScreen} 
-        />;
+        return (
+          <RecordsScreen
+            setActiveTab={setActiveTab}
+            setActiveScreen={setActiveScreen}
+          />
+        );
       case "profile":
         return (
-          <MyTicketsScreen 
-            setActiveTab={setActiveTab} 
+          <MyTicketsScreen
+            setActiveTab={setActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedReservation={setSelectedReservation}
             setSelectedBadge={setSelectedBadge}
           />
         );
       default:
-        return <HomeScreen 
-        setActiveTab={setActiveTab} 
-        />;
+        return <HomeScreen setActiveTab={setActiveTab} />;
     }
   };
 
