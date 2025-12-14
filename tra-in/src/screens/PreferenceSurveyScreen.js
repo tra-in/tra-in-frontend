@@ -4,8 +4,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import { Colors } from "../constants/theme";
 
 /**
- * 임시 선호도 조사 화면
- * - HEALING / ACTIVITY / FOOD 중 하나 선택
+ * 선호도 조사 화면
  * - 완료 누르면:
  *   - 직행: 도착지 기반 추천 받을지 질문 → Yes면 Travel 추천 화면(TravelScreen flowMode)로
  *   - 메뚜기: 바로 경유지 선택(BookingScreen)으로
@@ -19,9 +18,12 @@ export default function PreferenceSurveyScreen({
 }) {
   const options = useMemo(
     () => [
-      { key: "HEALING", label: "힐링" },
+      { key: "RELAXATION", label: "힐링" },
       { key: "ACTIVITY", label: "액티비티" },
       { key: "FOOD", label: "맛집" },
+      { key: "SHOPPING", label: "쇼핑" },
+      { key: "NATURE", label: "자연" },
+      { key: "CULTURE", label: "문화" },
     ],
     []
   );
@@ -96,7 +98,9 @@ export default function PreferenceSurveyScreen({
                 style={[styles.option, active && styles.optionActive]}
                 onPress={() => setSelected(opt.key)}
               >
-                <Text style={[styles.optionText, active && styles.optionTextActive]}>
+                <Text
+                  style={[styles.optionText, active && styles.optionTextActive]}
+                >
                   {opt.label}
                 </Text>
               </Pressable>

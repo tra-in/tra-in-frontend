@@ -1,85 +1,45 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, StyleSheet, FlatList, Button, ActivityIndicator, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  Button,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import { TRAVEL_API_BASE } from "../config/api";
-
-/** ✅ 임시: 도시 중심 좌표 하드코딩 (역/도시 이름 -> 좌표) */
-const CITY_CENTER = {
-  "강릉": { latitude: 37.7519, longitude: 128.8761 },
-  "광명": { latitude: 37.4772, longitude: 126.8664 },
-  "광주송정": { latitude: 35.1379, longitude: 126.7931 },
-  "김천구미": { latitude: 36.1286, longitude: 128.1112 },
-  "대구": { latitude: 35.8714, longitude: 128.6014 },
-  "대전": { latitude: 36.3504, longitude: 127.3845 },
-  "동대구": { latitude: 35.8784, longitude: 128.6286 },
-  "목포": { latitude: 34.8118, longitude: 126.3922 },
-  "부산": { latitude: 35.1796, longitude: 129.0756 },
-  "서울": { latitude: 37.5665, longitude: 126.9780 },
-  "순천": { latitude: 34.9506, longitude: 127.4872 },
-  "여수EXPO": { latitude: 34.7604, longitude: 127.6622 },
-  "오송": { latitude: 36.6200, longitude: 127.3270 },
-  "울산": { latitude: 35.5384, longitude: 129.3114 },
-  "익산": { latitude: 35.9483, longitude: 126.9578 },
-  "전주": { latitude: 35.8242, longitude: 127.1480 },
-  "청량리": { latitude: 37.5802, longitude: 127.0466 },
-  "춘천": { latitude: 37.8813, longitude: 127.7298 },
-  "포항": { latitude: 36.0190, longitude: 129.3435 },
-};
-
-function getCityCenter(region) {
-  return CITY_CENTER[region] ?? CITY_CENTER["서울"];
-}
-
-/** ✅ 앱 선호도 -> FastAPI travel_preference */
-function mapPreference(pref) {
-  switch (pref) {
-    case "HEALING":
-      return "nature";
-    case "ACTIVITY":
-      return "activity";
-    case "FOOD":
-      return "food";
-    default:
-      return "nature";
-  }
-}
-
-/** ✅ 선호도+지역 -> query 자동 생성 */
-function buildQuery(pref, region) {
-  switch (pref) {
-    case "HEALING":
-      return `${region}에서 힐링할 수 있는 잔잔하고 이쁜 산책하기 좋은 공원`;
-    case "ACTIVITY":
-      return `${region}에서 액티비티를 즐길 수 있는 체험/레저 명소`;
-    case "FOOD":
-      return `${region}에서 현지 맛집과 분위기 좋은 식당`;
-    default:
-      return `${region} 여행 추천`;
-  }
-}
+import { mapPreference, buildQuery } from "../utils/preference";
+import { CITY_CENTER, getCityCenter } from "../utils/geo";
 
 export default function TravelRecommendListScreen({
   // App.js에서 넘겨줄 값들
-  flowModeType,   // "direct" | "hopper"
+  flowModeType, // "direct" | "hopper"
   region,
-  preference,     // "HEALING" | "ACTIVITY" | "FOOD" ...
-  context,        // "wp1" | "wp2" | "dest"
-  snapshot,       // BookingScreen에서 넘긴 { routeStops, wp1, wp2 } 등
+  preference, // "RELAXATION" | "ACTIVITY" | "FOOD" ...
+  context, // "wp1" | "wp2" | "dest"
+  snapshot, // BookingScreen에서 넘긴 { routeStops, wp1, wp2 } 등
 
   // App.js가 넘겨줄 콜백 (이름 통일 추천)
-  onFlowConfirm,  // 담기 눌렀을 때
-  onFlowBack,     // 경유지 다시 고르기
+  onFlowConfirm, // 담기 눌렀을 때
+  onFlowBack, // 경유지 다시 고르기
 }) {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [errorText, setErrorText] = useState("");
+  const [selectedItems, setSelectedItems] = useState({}); // { itemId: true/false }
 
   // ✅ 디버그 박스 토글 (원하면 false로)
   const DEBUG = true;
 
   const center = useMemo(() => getCityCenter(region), [region]);
   const travelPref = useMemo(() => mapPreference(preference), [preference]);
-  const query = useMemo(() => buildQuery(preference, region), [preference, region]);
+  const query = useMemo(
+    () => buildQuery(preference, region),
+    [preference, region]
+  );
 
   // ✅ Swagger body에 맞춘 payload (필요 시 값만 조정)
   const payload = useMemo(() => {
@@ -110,11 +70,14 @@ export default function TravelRecommendListScreen({
         setItems([]);
 
         // ✅ endpoint: /api/v1/travel/search/location-hybrid
-        const res = await fetch(`${TRAVEL_API_BASE}/travel/search/location-hybrid`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const res = await fetch(
+          `${TRAVEL_API_BASE}/travel/search/location-hybrid`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
 
         const data = await res.json();
         if (cancelled) return;
@@ -150,14 +113,20 @@ export default function TravelRecommendListScreen({
           <View style={styles.debugBox}>
             <Text style={styles.debugTitle}>DEBUG</Text>
             <Text style={styles.debugText}>region: {region}</Text>
-            <Text style={styles.debugText}>preference(raw): {String(preference)}</Text>
-            <Text style={styles.debugText}>travel_preference: {travelPref}</Text>
+            <Text style={styles.debugText}>
+              preference(raw): {String(preference)}
+            </Text>
+            <Text style={styles.debugText}>
+              travel_preference: {travelPref}
+            </Text>
             <Text style={styles.debugText}>
               center: {center.latitude}, {center.longitude}
             </Text>
             <Text style={styles.debugText}>query: {query}</Text>
             <ScrollView style={{ maxHeight: 120, marginTop: 8 }}>
-              <Text style={styles.debugJson}>{JSON.stringify(payload, null, 2)}</Text>
+              <Text style={styles.debugJson}>
+                {JSON.stringify(payload, null, 2)}
+              </Text>
             </ScrollView>
           </View>
         )}
@@ -169,44 +138,77 @@ export default function TravelRecommendListScreen({
           </View>
         ) : (
           <>
-            {errorText ? <Text style={{ color: "red", marginBottom: 8 }}>{errorText}</Text> : null}
+            {errorText ? (
+              <Text style={{ color: "red", marginBottom: 8 }}>{errorText}</Text>
+            ) : null}
 
             <FlatList
               data={items}
               keyExtractor={(item, idx) => String(item?.id ?? idx)}
-              renderItem={({ item }) => (
-                <View style={styles.card}>
-                  <Text style={styles.cardTitle}>{item?.title ?? "제목 없음"}</Text>
-                  {!!item?.address && <Text style={styles.cardSub}>{item.address}</Text>}
-                  {typeof item?.distance_km === "number" && (
-                    <Text style={styles.cardSub}>거리: {item.distance_km.toFixed(2)} km</Text>
-                  )}
-                  {!!item?.content_type_name && (
-                    <Text style={styles.cardTag}>{item.content_type_name}</Text>
-                  )}
-                </View>
-              )}
+              renderItem={({ item }) => {
+                const isSelected = selectedItems[item?.id] ?? false;
+                return (
+                  <View style={styles.cardContainer}>
+                    <View style={styles.card}>
+                      <Text style={styles.cardTitle}>
+                        {item?.title ?? "제목 없음"}
+                      </Text>
+                      {!!item?.address && (
+                        <Text style={styles.cardSub}>{item.address}</Text>
+                      )}
+                      {typeof item?.distance_km === "number" && (
+                        <Text style={styles.cardSub}>
+                          거리: {item.distance_km.toFixed(2)} km
+                        </Text>
+                      )}
+                      {!!item?.content_type_name && (
+                        <Text style={styles.cardTag}>
+                          {item.content_type_name}
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={[
+                        styles.thumbsUpButton,
+                        isSelected && styles.thumbsUpButtonActive,
+                      ]}
+                      onPress={() => {
+                        setSelectedItems((prev) => ({
+                          ...prev,
+                          [item?.id]: !prev[item?.id],
+                        }));
+                      }}
+                    >
+                      <Text style={styles.thumbsUpText}>
+                        {isSelected ? "👍" : "👍"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              }}
               ListEmptyComponent={<Text>추천 결과가 없습니다.</Text>}
             />
           </>
         )}
 
         <View style={{ marginTop: 12 }}>
-          <Button
-            title="경유지 다시 고르기"
-            onPress={() => onFlowBack?.()}
-          />
+          <Button title="경유지 다시 고르기" onPress={() => onFlowBack?.()} />
           <View style={{ height: 8 }} />
           <Button
             title="담기"
-            onPress={() =>
+            onPress={() => {
+              // 선택된 항목들 필터링
+              const selectedList = items.filter(
+                (item) => selectedItems[item?.id]
+              );
               onFlowConfirm?.({
                 mode: flowModeType,
                 context,
                 region,
                 snapshot,
-              })
-            }
+                selectedItems: selectedList,
+              });
+            }}
           />
         </View>
       </View>
@@ -219,16 +221,41 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 12 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
+  cardContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
   card: {
+    flex: 1,
     padding: 12,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
-    marginBottom: 8,
   },
   cardTitle: { fontWeight: "700", marginBottom: 4 },
   cardSub: { color: "#555", fontSize: 12 },
   cardTag: { marginTop: 6, color: "#0A84FF", fontWeight: "600" },
+
+  thumbsUpButton: {
+    marginLeft: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 50,
+    minHeight: 50,
+  },
+  thumbsUpButtonActive: {
+    backgroundColor: "#fff3cd",
+    borderColor: "#ffc107",
+  },
+  thumbsUpText: {
+    fontSize: 24,
+  },
 
   debugBox: {
     borderWidth: 1,
