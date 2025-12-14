@@ -1,13 +1,4 @@
 export const IMAGES = {
-  //   // 공통
-  //   LOGO: "https://cdn.example.com/images/logo.png",
-  //   DEFAULT_PROFILE: "https://cdn.example.com/images/profile/default.png",
-  //   // 기차 / 티켓
-  //   TRAIN: "https://cdn.example.com/images/train.png",
-  //   TICKET: "https://cdn.example.com/images/ticket.png",
-  //   // 배너
-  //   MAIN_BANNER: "https://cdn.example.com/images/banner/main.png",
-  //   EVENT_BANNER: "https://cdn.example.com/images/banner/event.png",
   places1_1:
     "https://cdn.daejonilbo.com/news/photo/201310/1085229_145639_5921.jpg",
   places1_2:
