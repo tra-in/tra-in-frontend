@@ -165,6 +165,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE5EF",
     alignSelf: "center",
     marginTop: 4,
+    paddingLeft: 12,
+    paddingRight: 6,
   },
   aiButtonText: {
     color: "#FF81B9",
