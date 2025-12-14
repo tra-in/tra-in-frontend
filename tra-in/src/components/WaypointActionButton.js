@@ -1,11 +1,11 @@
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { Colors } from "../constants/theme";
 
-export default function WaypointActionButton({ onPress }) {
+export default function WaypointActionButton({ onPress, style }) {
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={[styles.button, style]}
       onPress={onPress}
       activeOpacity={0.85}
     >
@@ -16,20 +16,12 @@ export default function WaypointActionButton({ onPress }) {
 
 const styles = StyleSheet.create({
   button: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.white,
     borderColor: Colors.korailSilver,
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginLeft: 10, // align with card
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    backgroundColor: Colors.white,
   },
   text: {
     color: Colors.korailGray,

@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "../constants/theme";
 import WaypointActionButton from "./WaypointActionButton";
+import { MaterialIcons } from "@expo/vector-icons";
 
 const typeColor = {
   기차역: Colors.korailBlue,
@@ -16,37 +17,68 @@ export default function WaypointCard({
   type,
   showDivider,
   onDirectionsPress,
+
+  isEditing = false,
+  onRemove,
 }) {
   return (
-    <View style={styles.card}>
-      <View
-        style={[
-          styles.marker,
-          { backgroundColor: typeColor[type] || Colors.korailGray },
-        ]}
-      >
-        <Text style={styles.markerText}>{number}</Text>
+    <View style={styles.row}>
+      {isEditing && (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onRemove}
+          style={styles.removeBtn}
+        >
+          <MaterialIcons name="remove" size={18} color={Colors.white} />
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.card}>
+        <View
+          style={[
+            styles.marker,
+            { backgroundColor: typeColor[type] || Colors.korailGray },
+          ]}
+        >
+          <Text style={styles.markerText}>{number}</Text>
+        </View>
+
+        {showDivider && <View style={styles.divider} />}
+
+        <View style={styles.infoWrap}>
+          <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+            {title}
+          </Text>
+          <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">
+            {desc}
+          </Text>
+        </View>
+
+        <View style={styles.actionWrap}>
+          {!isEditing && <WaypointActionButton onPress={onDirectionsPress} />}
+        </View>
       </View>
-
-      {showDivider && <View style={styles.divider} />}
-
-      <View style={styles.infoWrap}>
-        <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          {title}
-        </Text>
-
-        <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">
-          {desc}
-        </Text>
-      </View>
-
-      <WaypointActionButton onPress={onDirectionsPress} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  removeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#FF5A6A",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 10,
+  },
   card: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.white,
@@ -54,14 +86,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 10,
     height: 55,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-    position: "relative",
-    paddingRight: 8,
+    paddingRight: 10,
   },
   marker: {
     width: 24,
@@ -69,7 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 17,
+    marginLeft: 14,
     marginRight: 10,
   },
   divider: {
@@ -83,27 +108,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 12,
   },
-
-  // ✅ Android에서 말줄임 안정화
   infoWrap: {
     flex: 1,
-    minWidth: 0, // 중요: flex 아이템 안 Text가 ellipsis 되려면 필요할 때가 많음
     justifyContent: "center",
-    marginRight: 8,
+    marginRight: 10,
   },
-
-  // ✅ 한 줄 + 말줄임
   title: {
     fontSize: 15,
     fontWeight: "600",
     color: "#2d2d2d",
-    flexShrink: 1,
   },
   desc: {
     fontSize: 12,
     color: Colors.korailGray,
     fontWeight: "500",
     marginTop: 2,
-    flexShrink: 1,
+  },
+  actionWrap: {
+    justifyContent: "center",
+    alignItems: "flex-end",
   },
 });
