@@ -1,23 +1,40 @@
 import React from "react";
-import { Text, View, TouchableOpacity } from "react-native";
+import { View, TouchableOpacity, Image } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { ArrowLeftIcon } from "./Icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
-/**
- * Reusable header component used across all screens
- */
-const ScreenHeader = ({ title = "트레:in(人)", showBackButton = false, onBackPress }) => {
+const ScreenHeader = ({ showBackButton = false, onBackPress, onMenuPress }) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={screenStyles.header}>
-      {showBackButton && (
-        <TouchableOpacity style={screenStyles.backButton} onPress={onBackPress}>
-          <ArrowLeftIcon color="#FFFFFF" />
+    <View style={[screenStyles.header, { paddingTop: insets.top }]}>
+      <View style={screenStyles.headerInner}>
+        {showBackButton && (
+          <TouchableOpacity
+            style={screenStyles.backButton}
+            onPress={onBackPress}
+            activeOpacity={0.7}
+          >
+            <ArrowLeftIcon color="#1F3A5F" />
+          </TouchableOpacity>
+        )}
+
+        <Image
+          source={require("../../assets/logo.png")}
+          style={screenStyles.headerLogo}
+          resizeMode="contain"
+        />
+
+        <TouchableOpacity
+          style={screenStyles.menuButton}
+          onPress={onMenuPress}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="menu" size={24} color="#1F3A5F" />
         </TouchableOpacity>
-      )}
-      <Text style={screenStyles.headerTitle}>{title}</Text>
-      <TouchableOpacity style={screenStyles.menuButton}>
-        <Text style={screenStyles.menuText}>☰</Text>
-      </TouchableOpacity>
+      </View>
     </View>
   );
 };

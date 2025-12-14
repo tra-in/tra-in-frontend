@@ -2,37 +2,42 @@ import React from "react";
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { screenStyles, contentStyles } from "../constants/screenStyles";
+import { SafeAreaView } from "react-native-safe-area-context"; // ✅ 변경
+import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
 import ReservationCard from "../components/ReservationCard";
 import BadgeCard from "../components/BadgeCard";
 import { dummyReservations as DUMMY_RESERVATIONS } from "../data/dummyReservations";
 import { generateDummyBadges } from "../data/dummyBadges";
-const DUMMY_BADGES = generateDummyBadges();
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 
-const MyTicketsScreen = ({ setActiveTab, setActiveScreen, setSelectedReservation, setSelectedBadge }) => {
+const DUMMY_BADGES = generateDummyBadges();
+
+const MyTicketsScreen = ({
+  setActiveTab,
+  setActiveScreen,
+  setSelectedReservation,
+  setSelectedBadge,
+}) => {
   const handleTabChange = (newTab) => {
-    if (setActiveScreen) {
-      setActiveScreen(null);
-    }
+    if (setActiveScreen) setActiveScreen(null);
     setActiveTab(newTab);
   };
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <SafeAreaView style={screenStyles.container} edges={[]}>
+      <ScreenHeader />
+
       <ScrollView
         style={screenStyles.content}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
       >
-        <ScreenHeader />
-
         <View style={screenStyles.body}>
           {/* Profile header */}
           <View style={styles.profileHeader}>
@@ -68,71 +73,116 @@ const MyTicketsScreen = ({ setActiveTab, setActiveScreen, setSelectedReservation
             </TouchableOpacity>
           </View>
 
-          {/* Recent reservations (compact, horizontal) */}
+          {/* Recent reservations */}
           <View style={styles.sectionHeaderRow}>
             <TouchableOpacity
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
-              onPress={() => { if (setActiveTab) setActiveTab('reservationList'); if (setActiveScreen) setActiveScreen(null); }}
+              onPress={() => {
+                if (setActiveTab) setActiveTab("reservationList");
+                if (setActiveScreen) setActiveScreen(null);
+              }}
             >
-              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>최근 예약</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
+                최근 예약
+              </Text>
               <Text style={styles.sectionActionIcon}>›</Text>
             </TouchableOpacity>
           </View>
+
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingLeft: 4, paddingRight: 12 }}
           >
-            {DUMMY_RESERVATIONS.slice(0,4).map((r) => (
+            {DUMMY_RESERVATIONS.slice(0, 4).map((r) => (
               <View key={r.id} style={styles.recentResWrapper}>
                 <ReservationCard
                   reservation={r}
                   compact
                   onPress={() => {
                     if (setSelectedReservation) setSelectedReservation(r);
-                    if (setActiveScreen) setActiveScreen('reservationDetail');
+                    if (setActiveScreen) setActiveScreen("reservationDetail");
                   }}
                 />
               </View>
             ))}
           </ScrollView>
 
-          {/* Recent badges separated by completed / not completed (horizontal) */}
+          {/* Completed badges */}
           <View style={styles.sectionHeaderRow}>
             <TouchableOpacity
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
-              onPress={() => { if (setActiveTab) setActiveTab('badgeList'); if (setActiveScreen) setActiveScreen(null); }}
+              onPress={() => {
+                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveScreen) setActiveScreen(null);
+              }}
             >
-              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>완료된 뱃지</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
+                완료된 뱃지
+              </Text>
               <Text style={styles.sectionActionIcon}>›</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 8, paddingRight: 12 }}>
-            {DUMMY_BADGES.filter(b => b.status === 'completed').slice(0,6).map(b => (
-              <View key={b.id} style={styles.badgeItemWrapper}>
-                <BadgeCard badge={b} compact onPress={() => { if (setSelectedBadge) setSelectedBadge(b); if (setActiveScreen) setActiveScreen('badgeDetail'); }} />
-              </View>
-            ))}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 8, paddingRight: 12 }}
+          >
+            {DUMMY_BADGES.filter((b) => b.status === "completed")
+              .slice(0, 6)
+              .map((b) => (
+                <View key={b.id} style={styles.badgeItemWrapper}>
+                  <BadgeCard
+                    badge={b}
+                    compact
+                    onPress={() => {
+                      if (setSelectedBadge) setSelectedBadge(b);
+                      if (setActiveScreen) setActiveScreen("badgeDetail");
+                    }}
+                  />
+                </View>
+              ))}
           </ScrollView>
 
+          {/* Not completed badges */}
           <View style={styles.sectionHeaderRow}>
             <TouchableOpacity
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
-              onPress={() => { if (setActiveTab) setActiveTab('badgeList'); if (setActiveScreen) setActiveScreen(null); }}
+              onPress={() => {
+                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveScreen) setActiveScreen(null);
+              }}
             >
-              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>미완료 뱃지</Text>
+              <Text style={[styles.sectionTitle, styles.sectionTitleNoMargin]}>
+                미완료 뱃지
+              </Text>
               <Text style={styles.sectionActionIcon}>›</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 8, paddingRight: 12 }}>
-            {DUMMY_BADGES.filter(b => b.status !== 'completed').slice(0,12).map(b => (
-              <View key={b.id} style={styles.badgeItemWrapper}>
-                <BadgeCard badge={b} compact onPress={() => { if (setSelectedBadge) setSelectedBadge(b); if (setActiveScreen) setActiveScreen('badgeDetail'); }} />
-              </View>
-            ))}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 8, paddingRight: 12 }}
+          >
+            {DUMMY_BADGES.filter((b) => b.status !== "completed")
+              .slice(0, 12)
+              .map((b) => (
+                <View key={b.id} style={styles.badgeItemWrapper}>
+                  <BadgeCard
+                    badge={b}
+                    compact
+                    onPress={() => {
+                      if (setSelectedBadge) setSelectedBadge(b);
+                      if (setActiveScreen) setActiveScreen("badgeDetail");
+                    }}
+                  />
+                </View>
+              ))}
           </ScrollView>
         </View>
       </ScrollView>
@@ -153,10 +203,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F4F4F4",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
@@ -169,34 +216,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   profileHeader: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 18,
   },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#E6EEF8',
+    backgroundColor: "#E6EEF8",
     marginRight: 14,
   },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.black,
-  },
-  profilePoint: {
-    marginTop: 6,
-    color: '#4B5563',
-  },
+  profileInfo: { flex: 1 },
+  profileName: { fontSize: 20, fontWeight: "700", color: Colors.black },
+  profilePoint: { marginTop: 6, color: "#4B5563" },
   quickActionsRow: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 18,
   },
   quickAction: {
@@ -205,33 +243,21 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingVertical: 18,
     marginHorizontal: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
-  quickActionText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.black,
-  },
-  sectionHeader: {
-    width: '100%',
-    marginTop: 8,
-    marginBottom: 8,
-  },
+  quickActionText: { fontSize: 16, fontWeight: "700", color: Colors.black },
   sectionHeaderRow: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
     marginBottom: 8,
-  },
-  sectionAction: {
-    marginLeft: 8,
   },
   sectionActionIcon: {
     fontSize: 28,
@@ -239,32 +265,16 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     marginLeft: 8,
   },
-  sectionTitleNoMargin: {
-    marginBottom: 0,
-  },
-  sectionHeaderTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  sectionTitleNoMargin: { marginBottom: 0 },
+  sectionHeaderTouchable: { flexDirection: "row", alignItems: "center" },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: Colors.black,
     marginBottom: 8,
   },
-  badgeRow: {
-    width: '100%',
-    flexDirection: 'row',
-    gap: 12,
-  },
-  recentResWrapper: {
-    width: 260,
-    marginRight: 12,
-  },
-  badgeItemWrapper: {
-    width: 172,
-    marginRight: 12,
-  },
+  recentResWrapper: { width: 260, marginRight: 12 },
+  badgeItemWrapper: { width: 172, marginRight: 12 },
 });
 
 export default MyTicketsScreen;
