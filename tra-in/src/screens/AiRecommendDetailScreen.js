@@ -1,34 +1,24 @@
 import React, { useMemo, useState, useRef } from "react";
-import {View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions,} from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import { screenStyles } from "../constants/screenStyles";
 import WaypointCard from "../components/WaypointCard";
 import WaypointActionButton from "../components/WaypointActionButton";
 import { Colors } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
+import { IMAGES, AVATAR } from "../constants/images";
 
 const { width } = Dimensions.get("window");
 
-const imgMap =
-  "http://10.0.2.2:3845/assets/90056faaae1ae1bcd98748385e95216bdab7d280.png";
-const imgAvatar =
-  "http://10.0.2.2:3845/assets/99ba85abef9eddd1cd0b4dc6a23df8c8c7d2afc3.png";
-const imgAvatar1 =
-  "http://10.0.2.2:3845/assets/1b5860a0f6bb3a218b4940d0f285a1ed9260ca16.png";
-const imgVector196 =
-  "http://10.0.2.2:3845/assets/18d23bf28d617b0fc339c85ffa337e5900f9f636.svg";
-const imgVector194 =
-  "http://10.0.2.2:3845/assets/f1b691c08b17ade4fd91121a00f1cd3ab9475629.svg";
-const imgVector195 =
-  "http://10.0.2.2:3845/assets/d516cc6e8e4b482ab1288dfa6c8ffad85f459764.svg";
-const imgVector197 =
-  "http://10.0.2.2:3845/assets/d49f5806fbb3efccf83a706dac82a6ab3676cc3b.svg";
-const imgVector198 =
-  "http://10.0.2.2:3845/assets/de475983ff7d638b8ddf4297e35abb3c2c2bd45d.svg";
-const imgVector193 =
-  "http://10.0.2.2:3845/assets/7031eb115ae2ee7241c64d397a534e5ca0559aa7.svg";
-const imgRectangle392 =
-  "http://10.0.2.2:3845/assets/39b7b2f2d4cd7ef4ecb1431e72ccd406333c1075.svg";
+const imgAvatar = AVATAR.AVATAR;
 
 const waypoints = [
   {
@@ -186,7 +176,7 @@ export default function AiRecommendDetailScreen({
             <Text style={{ color: Colors.korailGray }}>[카카오맵 영역]</Text>
           </View>
           <View style={styles.routeSummary}>
-            <Image source={{ uri: imgAvatar }} style={styles.avatarSmall} />
+            <Image source={imgAvatar} style={styles.avatarSmall} />
             <Text style={styles.routeText}>{segment}</Text>
           </View>
         </View>

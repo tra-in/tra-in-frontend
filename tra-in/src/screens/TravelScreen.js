@@ -1,9 +1,17 @@
 import React, { useState } from "react";
-import {Text, View, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions} from "react-native";
+import {
+  Text,
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors } from "../constants/theme";
+import { IMAGES, AVATAR } from "../constants/images";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 import PlaceCard from "../components/PlaceCard";
@@ -15,32 +23,27 @@ const places1 = [
   {
     name: "한밭수목원",
     region: "대전광역시 서구",
-    image:
-      "http://10.0.2.2:3845/assets/236627a69d8aff909c691add6983739798d08da3.png",
+    image: IMAGES.places1_1,
   },
   {
     name: "장태산자연휴양림",
     region: "대전광역시 서구",
-    image:
-      "http://10.0.2.2:3845/assets/262a57cf60324787cdeea484abf80bc4bef8bce8.png",
+    image: IMAGES.places1_2,
   },
   {
     name: "대전 오월드",
     region: "대전광역시 중구",
-    image:
-      "http://10.0.2.2:3845/assets/6b745c76fe40dfd69d01701854f932e9139ffe97.png",
+    image: IMAGES.places1_3,
   },
   {
     name: "뿌리공원",
     region: "대전광역시 중구",
-    image:
-      "http://10.0.2.2:3845/assets/e29dcb4fa345ef1a617a571a7b479f37af48b618.png",
+    image: IMAGES.places1_4,
   },
   {
     name: "유림공원",
     region: "대전광역시 유성구",
-    image:
-      "http://10.0.2.2:3845/assets/6ce7eec86f1aba3846efd7c6cb5fb5fb1cecb7c7.png",
+    image: IMAGES.places1_5,
   },
 ];
 
@@ -48,37 +51,31 @@ const places2 = [
   {
     name: "이태리국시",
     region: "대전광역시 서구",
-    image:
-      "http://10.0.2.2:3845/assets/815bee86a89a2b22f2aed200fab7fcbb59a1bbc0.png",
+    image: IMAGES.places2_1,
   },
   {
     name: "백송 대전유성점",
     region: "대전광역시 유성구",
-    image:
-      "http://10.0.2.2:3845/assets/b7875e63382b16246a27a76f5d68e490392c958a.png",
+    image: IMAGES.places2_2,
   },
   {
     name: "정식당",
     region: "대전광역시 유성구",
-    image:
-      "http://10.0.2.2:3845/assets/e2592603fdff2ff183ed7b26644c3aefe6ab8312.png",
+    image: IMAGES.places2_3,
   },
   {
     name: "성심당 본점",
     region: "대전광역시 중구",
-    image:
-      "http://10.0.2.2:3845/assets/f8d0eceda0a10884c7a7c574b4df3bbb443a87fd.png",
+    image: IMAGES.places2_4,
   },
   {
     name: "리코타코",
     region: "대전광역시 유성구",
-    image:
-      "http://10.0.2.2:3845/assets/50b27a2998332c3bc81fa87ec30fe220b6b56709.png",
+    image: IMAGES.places2_5,
   },
 ];
 
-const avatar =
-  "http://10.0.2.2:3845/assets/1b5860a0f6bb3a218b4940d0f285a1ed9260ca16.png";
+const avatar = AVATAR.AVATAR;
 
 const TravelScreen = ({
   setActiveTab,

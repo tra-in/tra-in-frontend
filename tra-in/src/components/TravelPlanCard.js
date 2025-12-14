@@ -38,7 +38,7 @@ const TravelPlanCard = ({
       </Text>
     </View>
     <Image
-      source={{ uri: avatar }}
+      source={avatar}
       style={[
         styles.avatar,
         {
