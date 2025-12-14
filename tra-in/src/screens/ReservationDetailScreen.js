@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -36,7 +36,7 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
   };
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <View style={screenStyles.container}>
       <ScreenHeader 
         showBackButton={true} 
         title="트레:in(人)" 
@@ -162,7 +162,7 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
         activeTab="profile" 
         setActiveTab={handleTabChange}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

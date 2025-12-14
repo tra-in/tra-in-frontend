@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Spacing, Colors } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -87,7 +87,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
   };
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <View style={screenStyles.container}>
       <ScreenHeader 
         showBackButton={true}
         onBackPress={() => setActiveTab("profile")}
@@ -143,7 +143,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
         onDelete={handleDeleteBadge}
         onClose={() => setShowBadgeMenu(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
