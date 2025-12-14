@@ -53,7 +53,7 @@ export const ProfileIconFill = wrapSvg(ProfileFill);
  * (fill 개념 없는 아이콘)
  * ========================= */
 
-import ArrowLeft from "../../assets/Icons/arrow_left.svg";
+import ArrowLeft from "../../assets/Icons/chevron_left.svg";
 import ChevronDown from "../../assets/Icons/chevron_down.svg";
 import ChevronRight from "../../assets/Icons/chevron_right.svg";
 import Phone from "../../assets/Icons/phone.svg";
