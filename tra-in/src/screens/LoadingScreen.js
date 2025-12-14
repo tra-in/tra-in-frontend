@@ -91,10 +91,11 @@ const styles = StyleSheet.create({
   loadingGif: {
     width: "100%",
     height: "100%",
+    transform: [{ translateY: -80 }],
   },
   textContainer: {
     position: "absolute",
-    bottom: "15%",
+    bottom: "40%",
     left: 0,
     right: 0,
     paddingHorizontal: 24,
