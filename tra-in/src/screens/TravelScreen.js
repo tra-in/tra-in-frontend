@@ -118,6 +118,9 @@ const TravelScreen = ({
 
   // 모달에서 확인 클릭
   const handleConfirmLeg = (legKey) => {
+    console.log("CONFIRM LEG:", legKey);
+    console.log("setActiveScreen is function?", typeof setActiveScreen);
+
     setStopoverModalVisible(false);
 
     const segment =
@@ -125,6 +128,8 @@ const TravelScreen = ({
         ? `${trip.from} - ${trip.via}`
         : `${trip.via} - ${trip.to}`;
     setSelectedSegment?.(segment);
+
+    console.log("GO AI DETAIL NOW");
 
     // 실제 네비게이션: 새 화면으로 이동
     if (setActiveScreen) {

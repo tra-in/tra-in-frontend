@@ -226,10 +226,9 @@ export default function AiRecommendDetailScreen({
               />
 
               {/* 카드 사이 파란 + (편집 모드일 때만) */}
-              {isEditing && idx !== waypointsState.length && (
+              {isEditing && (
                 <View style={styles.addRow}>
                   <TouchableOpacity
-                    activeOpacity={0.85}
                     onPress={() => handleAddAfter(idx)}
                     style={styles.addBtn}
                   >
