@@ -14,8 +14,10 @@ import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
 import CameraChatScreen from "./src/screens/CameraChatScreen";
 import BookingScreen from "./src/screens/BookingScreen";
+import LoginScreen from "./src/screens/LoginScreen";
 
 export default function App() {
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("home");
   const [searchParams, setSearchParams] = useState(null);
   const [activeScreen, setActiveScreen] = useState(null);
@@ -24,6 +26,15 @@ export default function App() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [previousScreen, setPreviousScreen] = useState(null);
+
+  if (!user) {
+    return (
+      <View style={styles.container}>
+        <LoginScreen onLogin={setUser} />
+        <StatusBar style="light" />
+      </View>
+    );
+  }
 
   const renderScreen = () => {
     // 예약 상세 화면
@@ -100,7 +111,18 @@ export default function App() {
     // 기본 탭 화면
     switch (activeTab) {
       case "home":
-        return <HomeScreen setActiveTab={setActiveTab} />;
+        return <HomeScreen
+         setActiveTab={setActiveTab}
+         searchParams={searchParams}
+         setSearchParams={setSearchParams}
+         user={user}
+         />;
+      case "booking":
+        return <BookingScreen
+          setActiveTab={setActiveTab}
+          searchParams={searchParams}
+          user={user}
+        />;
       case "travel":
         return (
           <TravelScreen
@@ -143,7 +165,12 @@ export default function App() {
           />
         );
       default:
-        return <HomeScreen setActiveTab={setActiveTab} />;
+        return <HomeScreen
+                   setActiveTab={setActiveTab}
+                   searchParams={searchParams}
+                   setSearchParams={setSearchParams}
+                   user={user}
+                 />;
     }
   };
 

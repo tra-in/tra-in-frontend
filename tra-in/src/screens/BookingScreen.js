@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Button,
+  Alert,
 } from "react-native";
 import { API_BASE } from "../config/api";
 import ScreenHeader from "../components/ScreenHeader";
@@ -118,7 +119,10 @@ function TrainList({ title, origin, dest, baseDate, after, onSelect }) {
           return (
             <Pressable
               key={d}
-              style={[styles.trainDateChip, active && styles.trainDateChipActive]}
+              style={[
+                styles.trainDateChip,
+                active && styles.trainDateChipActive,
+              ]}
               onPress={() => setSelectedDate(d)}
             >
               <Text
@@ -148,8 +152,8 @@ function TrainList({ title, origin, dest, baseDate, after, onSelect }) {
 function formatMonthDay(dateTimeStr) {
   if (!dateTimeStr) return "";
   const month = dateTimeStr.slice(5, 7); // "12"
-  const day = dateTimeStr.slice(8, 10);  // "16"
-  return `${month}/${day}`;              // "12/16"
+  const day = dateTimeStr.slice(8, 10); // "16"
+  return `${month}/${day}`; // "12/16"
 }
 
 /* ==================== 좌석 선택 컴포넌트 ==================== */
@@ -299,7 +303,7 @@ function SeatSelect({ legTitle, train, date, onConfirm }) {
 }
 
 /* ==================== 메인 화면 ==================== */
-export default function BookingScreen({ setActiveTab, searchParams }) {
+export default function BookingScreen({ setActiveTab, searchParams, user }) {
   const [mode, setMode] = useState(null); // 'direct' | 'hopper'
   const [routeStops, setRouteStops] = useState([]);
   const [currentLegIndex, setCurrentLegIndex] = useState(0);
@@ -470,6 +474,67 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
     setCurrentLegIndex(0);
     setStep("train");
   };
+
+  /* ====== 예매 저장 로직 ====== */
+  const handleReserve = async () => {
+    if (!user || !user.id) {
+      Alert.alert("오류", "로그인 정보가 없습니다.");
+      return;
+    }
+
+    // 구간 + 선택된 열차/좌석을 묶어서 legs payload 생성
+    const legsPayload = legs
+      .map((leg, idx) => {
+        const train = selectedTrains[idx];
+        const seat = selectedSeats[idx];
+        if (!train || !seat) return null;
+
+        return {
+          // 🔁 백엔드 DTO에 맞게 필드 이름 변경
+          originStation: leg.from,
+          destStation: leg.to,
+          departureTime: train.departureTime, // "2025-12-16T06:30:00"
+          arrivalTime: train.arrivalTime,
+          trainNo: train.trainNo,             // 🔁 trainName 대신 trainNo 하나만 전송
+          carNo: seat.carNo,
+          seatCode: seat.seatCode,
+        };
+      })
+      .filter(Boolean);
+
+    if (legsPayload.length === 0) {
+      Alert.alert("알림", "저장할 예매 정보가 없습니다.");
+      return;
+    }
+
+    const payload = {
+      userId: user.id,
+      isHopper: mode === "hopper",
+      legs: legsPayload,
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/user-tickets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error("reserve error", await res.text());
+        Alert.alert("오류", "예매 저장에 실패했습니다.");
+        return;
+      }
+
+      Alert.alert("완료", "예매가 저장되었습니다.");
+      setActiveTab("home");
+    } catch (e) {
+      console.error("reserve error", e);
+      Alert.alert("오류", "예매 저장 중 문제가 발생했습니다.");
+    }
+  };
+
+  /* ====== 화면 분기 ====== */
 
   let body = null;
 
@@ -670,6 +735,8 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
             }}
           />
           <View style={{ height: 8 }} />
+          <Button title="예매하기" onPress={handleReserve} />
+          <View style={{ height: 8 }} />
           <Button title="홈으로" onPress={() => setActiveTab("home")} />
         </View>
       </View>
@@ -691,7 +758,7 @@ export default function BookingScreen({ setActiveTab, searchParams }) {
         onBackPress={() => setActiveTab("home")}
       />
       {body}
-      <BottomNavigation activeTab="booking" setActiveTab={setActiveTab} />
+      <BottomNavigation activeTab="home" setActiveTab={setActiveTab} />
     </View>
   );
 }
@@ -783,53 +850,28 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { fontSize: 16, fontWeight: "600" },
 
-    trainDateRow: {
-      flexDirection: "row",
-      gap: 8,
-      marginBottom: 8,
-    },
-    trainDateChip: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: "#ddd",
-    },
-    trainDateChipActive: {
-      borderColor: "#0A84FF",
-      backgroundColor: "#0A84FF11",
-    },
-    trainDateChipText: {
-      fontSize: 12,
-      color: "#555",
-    },
-    trainDateChipTextActive: {
-      color: "#0A84FF",
-      fontWeight: "bold",
-    },
-
-     trainDateRow: {
-       flexDirection: "row",
-       gap: 8,
-       marginBottom: 8,
-     },
-     trainDateChip: {
-       paddingHorizontal: 10,
-       paddingVertical: 4,
-       borderRadius: 12,
-       borderWidth: 1,
-       borderColor: "#ddd",
-     },
-     trainDateChipActive: {
-       borderColor: "#0A84FF",
-       backgroundColor: "#0A84FF11",
-     },
-     trainDateChipText: {
-       fontSize: 12,
-       color: "#555",
-     },
-     trainDateChipTextActive: {
-       color: "#0A84FF",
-       fontWeight: "bold",
-     },
+  trainDateRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  trainDateChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  trainDateChipActive: {
+    borderColor: "#0A84FF",
+    backgroundColor: "#0A84FF11",
+  },
+  trainDateChipText: {
+    fontSize: 12,
+    color: "#555",
+  },
+  trainDateChipTextActive: {
+    color: "#0A84FF",
+    fontWeight: "bold",
+  },
 });
