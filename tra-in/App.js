@@ -27,15 +27,6 @@ export default function App() {
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [previousScreen, setPreviousScreen] = useState(null);
 
-  if (!user) {
-    return (
-      <View style={styles.container}>
-        <LoginScreen onLogin={setUser} />
-        <StatusBar style="light" />
-      </View>
-    );
-  }
-
   const renderScreen = () => {
     // 예약 상세 화면
     if (activeScreen === "reservationDetail" && selectedReservation) {
@@ -176,10 +167,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <View style={styles.container}>
-        {renderScreen()}
-        <StatusBar style="dark" />
-      </View>
+      {user ? (
+        <View style={styles.container}>
+          {renderScreen()}
+          <StatusBar style="dark" />
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <LoginScreen onLogin={setUser} />
+          <StatusBar style="light" />
+        </View>
+      )}
     </SafeAreaProvider>
   );
 }

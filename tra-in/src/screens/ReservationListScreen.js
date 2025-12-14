@@ -1,6 +1,6 @@
 import React from "react";
-import {Text, View, SafeAreaView, ScrollView, StyleSheet} from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
+import {Text, View, ScrollView, StyleSheet} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";

@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import {
-  Text,
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  useWindowDimensions,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context"; // ✅ 변경
+import {Text, View, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors } from "../constants/theme";
