@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -85,48 +85,89 @@ export default function AiRecommendDetailScreen({
   waypoints: propWaypoints,
 }) {
   // 실제로는 propWaypoints를 받아야 함. 없으면 기존 더미 사용
-  const waypoints = propWaypoints || [
-    {
-      number: 1,
-      type: "기차역",
-      title: "대전역",
-      desc: "기차역 | 대전 동구 중앙로 215",
-    },
-    {
-      number: 2,
-      type: "맛집/카페",
-      title: "김화칼국수",
-      desc: "맛집/카페 | 대전 동구 중앙로203번길 28",
-    },
-    {
-      number: 3,
-      type: "맛집/카페",
-      title: "꿈틀",
-      desc: "맛집/카페 | 대전 동구 중앙로203번길 5",
-    },
-    {
-      number: 4,
-      type: "관광",
-      title: "꿈돌이하우스",
-      desc: "관광 | 대전 동구 중앙로203번길 3",
-    },
-    {
-      number: 5,
-      type: "관광",
-      title: "대전트래블라운지",
-      desc: "관광 | 대전 동구 중앙로 187-1",
-    },
-    {
-      number: 6,
-      type: "맛집/카페",
-      title: "미들커피",
-      desc: "맛집/카페 | 대전 동구 대전로797번길 46",
-    },
-  ];
+  const initialWaypoints = useMemo(() => {
+    return (
+      propWaypoints || [
+        {
+          number: 1,
+          type: "기차역",
+          title: "대전역",
+          desc: "기차역 | 대전 동구 중앙로 215",
+        },
+        {
+          number: 2,
+          type: "맛집/카페",
+          title: "김화칼국수",
+          desc: "맛집/카페 | 대전 동구 중앙로203번길 28",
+        },
+        {
+          number: 3,
+          type: "맛집/카페",
+          title: "꿈틀",
+          desc: "맛집/카페 | 대전 동구 중앙로203번길 5",
+        },
+        {
+          number: 4,
+          type: "관광",
+          title: "꿈돌이하우스",
+          desc: "관광 | 대전 동구 중앙로203번길 3",
+        },
+        {
+          number: 5,
+          type: "관광",
+          title: "대전트래블라운지",
+          desc: "관광 | 대전 동구 중앙로 187-1",
+        },
+        {
+          number: 6,
+          type: "맛집/카페",
+          title: "미들커피",
+          desc: "맛집/카페 | 대전 동구 대전로797번길 46",
+        },
+      ]
+    );
+  }, [propWaypoints]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [waypointsState, setWaypointsState] = useState(initialWaypoints);
+  const scrollRef = useRef(null);
 
   const handleBack = () => {
     if (setActiveTab) setActiveTab("travel");
     if (setActiveScreen) setActiveScreen(null);
+  };
+
+  const renumber = (list) => list.map((w, idx) => ({ ...w, number: idx + 1 }));
+
+  const handleToggleEdit = () => {
+    setIsEditing((v) => {
+      const next = !v;
+      // if (next) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      });
+      // }
+      return next;
+    });
+  };
+
+  const handleRemove = (index) => {
+    setWaypointsState((prev) => renumber(prev.filter((_, i) => i !== index)));
+  };
+
+  const handleAddAfter = (index) => {
+    const dummy = {
+      number: 0,
+      type: "관광",
+      title: "새 경유지",
+      desc: "관광 | 주소를 입력해주세요",
+    };
+
+    setWaypointsState((prev) => {
+      const next = [...prev];
+      next.splice(index + 1, 0, dummy);
+      return renumber(next);
+    });
   };
 
   return (
@@ -160,22 +201,43 @@ export default function AiRecommendDetailScreen({
         {/* 경유지 리스트 헤더 + 편집 아이콘 */}
         <View style={styles.listHeaderRow}>
           <View style={{ flex: 1 }} />
-          <TouchableOpacity style={styles.editBtn}>
-            <MaterialIcons name="edit" size={22} color={Colors.korailGray} />
+          <TouchableOpacity style={styles.editBtn} onPress={handleToggleEdit}>
+            <MaterialIcons
+              name={isEditing ? "check" : "edit"}
+              size={22}
+              color={isEditing ? "#FF81B9" : Colors.korailGray}
+            />
           </TouchableOpacity>
         </View>
         {/* 경유지 카드 + 길찾기 버튼 */}
         <ScrollView
+          ref={scrollRef}
           style={styles.detailSection}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
-          {waypoints.map((wp, idx) => (
-            <WaypointCard
-              key={wp.number}
-              {...wp}
-              showDivider
-              onDirectionsPress={() => {}}
-            />
+          {waypointsState.map((wp, idx) => (
+            <View key={`${wp.number}-${idx}`}>
+              <WaypointCard
+                {...wp}
+                showDivider
+                isEditing={isEditing}
+                onRemove={() => handleRemove(idx)}
+                onDirectionsPress={() => {}}
+              />
+
+              {/* 카드 사이 파란 + (편집 모드일 때만) */}
+              {isEditing && idx !== waypointsState.length && (
+                <View style={styles.addRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => handleAddAfter(idx)}
+                    style={styles.addBtn}
+                  >
+                    <MaterialIcons name="add" size={18} color={Colors.white} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           ))}
         </ScrollView>
       </View>
@@ -284,5 +346,19 @@ const styles = StyleSheet.create({
   },
   editBtn: {
     padding: 6,
+  },
+  addRow: {
+    alignItems: "flex-start",
+    paddingLeft: 38, // 빨간 '-' 자리 + 간격 맞추기
+    marginTop: -4,
+    marginBottom: 10,
+  },
+  addBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#2F80FF",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
