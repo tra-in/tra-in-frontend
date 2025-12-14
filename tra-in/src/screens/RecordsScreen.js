@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, TouchableOpacity, Alert, ActivityIndicator} from "react-native";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
@@ -98,7 +99,7 @@ const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScreenHeader 
         showBackButton={false}
       />
@@ -147,7 +148,7 @@ const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
       </View>
 
       <BottomNavigation activeTab="records" setActiveTab={setActiveTab} />
-    </SafeAreaView>
+    </View>
   );
 };
 

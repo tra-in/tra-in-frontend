@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
@@ -49,7 +49,7 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
   };
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <View style={screenStyles.container}>
       <ScreenHeader 
         showBackButton={true}
         onBackPress={handleBackPress}
@@ -195,7 +195,7 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
           setActiveTab(tab);
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

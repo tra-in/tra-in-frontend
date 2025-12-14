@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Text,
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { Text,  View,  ScrollView,  StyleSheet,  TouchableOpacity,} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
@@ -30,7 +24,7 @@ const MyTicketsScreen = ({
   };
 
   return (
-    <SafeAreaView style={screenStyles.container} edges={[]}>
+    <View style={screenStyles.container} edges={[]}>
       <ScreenHeader />
 
       <ScrollView
@@ -188,7 +182,7 @@ const MyTicketsScreen = ({
       </ScrollView>
 
       <BottomNavigation activeTab="profile" setActiveTab={handleTabChange} />
-    </SafeAreaView>
+    </View>
   );
 };
 

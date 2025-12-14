@@ -1,13 +1,5 @@
 import React, { useMemo, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
+import {View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Dimensions,} from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import { screenStyles } from "../constants/screenStyles";
 import WaypointCard from "../components/WaypointCard";

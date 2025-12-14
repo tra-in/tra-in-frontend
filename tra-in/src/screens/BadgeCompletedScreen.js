@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { screenStyles } from "../constants/screenStyles";
-import { SafeAreaView } from "react-native-safe-area-context";
+// import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors, Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
@@ -36,7 +36,7 @@ const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace,
   };
 
   return (
-    <SafeAreaView style={screenStyles.container}>
+    <View style={screenStyles.container}>
       <ScreenHeader 
         showBackButton={true}
         onBackPress={handleBackPress}
@@ -88,7 +88,7 @@ const BadgeCompletedScreen = ({ setActiveTab, setActiveScreen, setSelectedPlace,
           onClose={() => setShowModal(false)}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

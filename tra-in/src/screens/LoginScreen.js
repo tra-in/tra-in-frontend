@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-} from "react-native";
+import { View,  Text,  TextInput,  StyleSheet,  Pressable,  KeyboardAvoidingView,  Platform,  Image,} from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 
 export default function LoginScreen({ onLogin }) {
