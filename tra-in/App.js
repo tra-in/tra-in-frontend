@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
 import HomeScreen from "./src/screens/HomeScreen";
 import TravelScreen from "./src/screens/TravelScreen";
 import RecordsScreen from "./src/screens/RecordsScreen";
@@ -14,21 +15,40 @@ import PlaceDetailScreen from "./src/screens/PlaceDetailScreen";
 import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
 import CameraChatScreen from "./src/screens/CameraChatScreen";
 import BookingScreen from "./src/screens/BookingScreen";
+import PreferenceSurveyScreen from "./src/screens/PreferenceSurveyScreen";
 import LoginScreen from "./src/screens/LoginScreen";
+import TravelRecommendListScreen from "./src/screens/TravelRecommendListScreen";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("home");
   const [searchParams, setSearchParams] = useState(null);
   const [activeScreen, setActiveScreen] = useState(null);
+
   const [selectedSegment, setSelectedSegment] = useState(null);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [previousScreen, setPreviousScreen] = useState(null);
 
+  const [userPreference, setUserPreference] = useState(null); // HEALING | ACTIVITY | FOOD
+
+  // travelFlow: { mode, region, context }
+  const [travelFlow, setTravelFlow] = useState(null);
+
+  // TravelScreen -> BookingScreen으로 돌아올 때 전달
+  const [pendingFlowResult, setPendingFlowResult] = useState(null);
+
+  // ✅ BookingScreen이 언마운트돼도 진행 상태 보존용
+  // 예: { mode, step, waypointPhase, routeStops, wp1, wp2, wp2Candidates, selectedTrains, selectedSeats }
+  const [bookingDraft, setBookingDraft] = useState(null);
+
+  const openTravelFlow = ({ mode, region, context, snapshot }) => {
+    setTravelFlow({ mode, region, context, snapshot });
+    setActiveScreen("travelFlow");
+  };
+
   const renderScreen = () => {
-    // 예약 상세 화면
     if (activeScreen === "reservationDetail" && selectedReservation) {
       return (
         <ReservationDetailScreen
@@ -38,7 +58,7 @@ export default function App() {
         />
       );
     }
-    // 장소 상세 화면
+
     if (activeScreen === "placeDetail" && selectedPlace) {
       return (
         <PlaceDetailScreen
@@ -50,7 +70,49 @@ export default function App() {
         />
       );
     }
-    // 카메라 채팅 화면
+
+    if (activeScreen === "preferenceSurvey") {
+      return (
+        <PreferenceSurveyScreen
+          setActiveTab={setActiveTab}
+          setActiveScreen={setActiveScreen}
+          searchParams={searchParams}
+          setUserPreference={setUserPreference}
+          openTravelFlow={openTravelFlow}
+        />
+      );
+    }
+
+    // ✅ 추천 여행지(플로우) 화면
+    if (activeScreen === "travelFlow" && travelFlow) {
+      return (
+        <TravelRecommendListScreen
+          region={travelFlow.region}
+          preference={userPreference}
+          flowModeType={travelFlow.mode}
+          context={travelFlow.context}
+          // BookingScreen이 결과 처리할 수 있게 pendingFlowResult로 넘기는 방식 유지
+          onFlowConfirm={() => {
+            setPendingFlowResult({
+              mode: travelFlow.mode,
+              context: travelFlow.context,
+              region: travelFlow.region,
+              snapshot: travelFlow.snapshot ?? null,
+            });
+            setTravelFlow(null);
+            setActiveScreen(null);
+            setActiveTab("booking");
+          }}
+          onFlowBack={() => {
+            const goTab = travelFlow.mode === "hopper" ? "booking" : "home";
+            setTravelFlow(null);
+            setActiveScreen(null);
+            setActiveTab(goTab);
+          }}
+        />
+      );
+    }
+
     if (activeScreen === "cameraChat") {
       return (
         <CameraChatScreen
@@ -60,7 +122,7 @@ export default function App() {
         />
       );
     }
-    // 뱃지 상세 화면 우선 처리
+
     if (activeScreen === "badgeDetail" && selectedBadge) {
       return (
         <BadgeDetailScreen
@@ -73,6 +135,7 @@ export default function App() {
         />
       );
     }
+
     if (activeScreen === "badgeCompleted" && selectedBadge) {
       return (
         <BadgeCompletedScreen
@@ -99,21 +162,33 @@ export default function App() {
       );
     }
 
-    // 기본 탭 화면
     switch (activeTab) {
       case "home":
-        return <HomeScreen
-         setActiveTab={setActiveTab}
-         searchParams={searchParams}
-         setSearchParams={setSearchParams}
-         user={user}
-         />;
+        return (
+          <HomeScreen
+            setActiveTab={setActiveTab}
+            setActiveScreen={setActiveScreen}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+            user={user}
+          />
+        );
+
       case "booking":
-        return <BookingScreen
-          setActiveTab={setActiveTab}
-          searchParams={searchParams}
-          user={user}
-        />;
+        return (
+          <BookingScreen
+            setActiveTab={setActiveTab}
+            searchParams={searchParams}
+            user={user}
+            userPreference={userPreference}
+            openTravelFlow={openTravelFlow}
+            pendingFlowResult={pendingFlowResult}
+            clearPendingFlowResult={() => setPendingFlowResult(null)}
+            bookingDraft={bookingDraft}
+            setBookingDraft={setBookingDraft}
+          />
+        );
+
       case "travel":
         return (
           <TravelScreen
@@ -122,6 +197,7 @@ export default function App() {
             setSelectedSegment={setSelectedSegment}
           />
         );
+
       case "reservationList":
         return (
           <ReservationListScreen
@@ -130,6 +206,7 @@ export default function App() {
             setSelectedReservation={setSelectedReservation}
           />
         );
+
       case "badgeList":
         return (
           <BadgeListScreen
@@ -139,6 +216,7 @@ export default function App() {
             setPreviousScreen={setPreviousScreen}
           />
         );
+
       case "records":
         return (
           <RecordsScreen
@@ -146,6 +224,7 @@ export default function App() {
             setActiveScreen={setActiveScreen}
           />
         );
+
       case "profile":
         return (
           <MyTicketsScreen
@@ -155,13 +234,16 @@ export default function App() {
             setSelectedBadge={setSelectedBadge}
           />
         );
+
       default:
-        return <HomeScreen
-                   setActiveTab={setActiveTab}
-                   searchParams={searchParams}
-                   setSearchParams={setSearchParams}
-                   user={user}
-                 />;
+        return (
+          <HomeScreen
+            setActiveTab={setActiveTab}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+            user={user}
+          />
+        );
     }
   };
 

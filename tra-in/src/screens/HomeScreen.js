@@ -8,6 +8,7 @@ const DATE_OPTIONS = ["2025-12-16", "2025-12-17", "2025-12-18"];
 
 export default function HomeScreen({
   setActiveTab,
+  setActiveScreen,
   searchParams,
   setSearchParams,
 }) {
@@ -70,7 +71,7 @@ export default function HomeScreen({
       passengers,
       isHopper: ticketType === "hopper",
     });
-    setActiveTab("booking");
+    setActiveScreen("preferenceSurvey");
   };
 
   return (
