@@ -1,11 +1,24 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 // import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
-import { PhoneIcon, MapPinIcon, ClockIcon, ChevronDownIcon, CheckIcon } from "../components/Icons";
+import {
+  PhoneIcon,
+  MapPinIcon,
+  ClockIcon,
+  ChevronDownIcon,
+  CheckIconBlue,
+} from "../components/Icons";
 
 /**
  * 장소 상세 화면
@@ -13,10 +26,16 @@ import { PhoneIcon, MapPinIcon, ClockIcon, ChevronDownIcon, CheckIcon } from "..
  * @param {function} setActiveScreen - 화면 변경 함수
  * @param {object} place - 장소 데이터
  * @param {function} onVisitToggle - 방문 토글 핸들러
- * 
- * 
+ *
+ *
  */
-const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle, previousScreen}) => {
+const PlaceDetailScreen = ({
+  setActiveTab,
+  setActiveScreen,
+  place,
+  onVisitToggle,
+  previousScreen,
+}) => {
   const [showBusinessHours, setShowBusinessHours] = useState(false);
 
   if (!place) return null;
@@ -50,12 +69,9 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
 
   return (
     <View style={screenStyles.container}>
-      <ScreenHeader 
-        showBackButton={true}
-        onBackPress={handleBackPress}
-      />
+      <ScreenHeader showBackButton={true} onBackPress={handleBackPress} />
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
@@ -66,36 +82,48 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
             <View style={styles.imageGrid}>
               {/* 큰 이미지 */}
               <View style={styles.mainImageContainer}>
-              <Image 
-                source={{ uri: place.images?.[0] || 'https://via.placeholder.com/133x167' }}
-                style={styles.mainImage}
-              />
-            </View>
+                <Image
+                  source={{
+                    uri:
+                      place.images?.[0] ||
+                      "https://via.placeholder.com/133x167",
+                  }}
+                  style={styles.mainImage}
+                />
+              </View>
 
-            {/* 작은 이미지들 */}
-            <View style={styles.smallImagesContainer}>
-              {[1, 2, 3, 4].map((index) => (
-                <View key={index} style={styles.smallImageWrapper}>
-                  {index === 4 ? (
-                    // 더보기 버튼
-                    <View style={styles.moreImagesOverlay}>
-                      <Image 
-                        source={{ uri: place.images?.[index] || 'https://via.placeholder.com/85x81' }}
+              {/* 작은 이미지들 */}
+              <View style={styles.smallImagesContainer}>
+                {[1, 2, 3, 4].map((index) => (
+                  <View key={index} style={styles.smallImageWrapper}>
+                    {index === 4 ? (
+                      // 더보기 버튼
+                      <View style={styles.moreImagesOverlay}>
+                        <Image
+                          source={{
+                            uri:
+                              place.images?.[index] ||
+                              "https://via.placeholder.com/85x81",
+                          }}
+                          style={styles.smallImage}
+                        />
+                        <View style={styles.moreImagesTextContainer}>
+                          <Text style={styles.moreImagesText}>더보기</Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <Image
+                        source={{
+                          uri:
+                            place.images?.[index] ||
+                            "https://via.placeholder.com/85x81",
+                        }}
                         style={styles.smallImage}
                       />
-                      <View style={styles.moreImagesTextContainer}>
-                        <Text style={styles.moreImagesText}>더보기</Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <Image 
-                      source={{ uri: place.images?.[index] || 'https://via.placeholder.com/85x81' }}
-                      style={styles.smallImage}
-                    />
-                  )}
-                </View>
-              ))}
-            </View>
+                    )}
+                  </View>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -110,17 +138,19 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
             </View>
 
             {/* 방문/미방문 버튼 */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[
                 styles.visitButton,
-                place.visited && styles.visitButtonActive
+                place.visited && styles.visitButtonActive,
               ]}
               onPress={handleVisitToggle}
             >
-              <Text style={[
-                styles.visitButtonText,
-                place.visited && styles.visitButtonTextActive
-              ]}>
+              <Text
+                style={[
+                  styles.visitButtonText,
+                  place.visited && styles.visitButtonTextActive,
+                ]}
+              >
                 {place.visited ? "방문" : "미방문"}
               </Text>
             </TouchableOpacity>
@@ -133,8 +163,12 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
           <View style={styles.addressSection}>
             <MapPinIcon size={17} color="#77777A" />
             <View style={styles.addressTextContainer}>
-              <Text style={styles.addressText}>{place.address?.new || "주소 정보 없음"}</Text>
-              <Text style={styles.addressTextOld}>{place.address?.old || ""}</Text>
+              <Text style={styles.addressText}>
+                {place.address?.new || "주소 정보 없음"}
+              </Text>
+              <Text style={styles.addressTextOld}>
+                {place.address?.old || ""}
+              </Text>
             </View>
           </View>
 
@@ -142,7 +176,7 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
           <View style={styles.divider} />
 
           {/* 영업시간 */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.businessHoursSection}
             onPress={toggleBusinessHours}
             activeOpacity={0.7}
@@ -152,7 +186,12 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
               <Text style={styles.businessStatusText}>영업 중</Text>
               <Text style={styles.businessTimeText}>21:30 까지</Text>
             </View>
-            <View style={[styles.chevronIcon, showBusinessHours && styles.chevronIconRotated]}>
+            <View
+              style={[
+                styles.chevronIcon,
+                showBusinessHours && styles.chevronIconRotated,
+              ]}
+            >
               <ChevronDownIcon size={17} color="#77777A" />
             </View>
           </TouchableOpacity>
@@ -180,7 +219,9 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
           {/* 전화번호 */}
           <View style={styles.phoneSection}>
             <PhoneIcon size={17} color="#77777A" />
-            <Text style={styles.phoneText}>{place.phone || "전화번호 정보 없음"}</Text>
+            <Text style={styles.phoneText}>
+              {place.phone || "전화번호 정보 없음"}
+            </Text>
           </View>
 
           {/* 구분선 */}
@@ -188,8 +229,8 @@ const PlaceDetailScreen = ({ setActiveTab, setActiveScreen, place, onVisitToggle
         </View>
       </ScrollView>
 
-      <BottomNavigation 
-        activeTab="travel" 
+      <BottomNavigation
+        activeTab="travel"
         setActiveTab={(tab) => {
           setActiveScreen(null);
           setActiveTab(tab);
@@ -208,7 +249,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 20,
   },
-  
+
   // 이미지 그리드 래퍼
   imageGridWrapper: {
     width: "100%",
@@ -267,14 +308,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
   },
-  
+
   // 구분선
   divider: {
     height: 1,
     backgroundColor: "#E0E0E0",
     marginVertical: 10,
   },
-  
+
   // 가게 정보
   infoSection: {
     flexDirection: "row",
@@ -313,7 +354,7 @@ const styles = StyleSheet.create({
   visitButtonTextActive: {
     color: Colors.white,
   },
-  
+
   // 주소
   addressSection: {
     flexDirection: "row",
@@ -333,7 +374,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.gray,
   },
-  
+
   // 영업시간
   businessHoursSection: {
     paddingHorizontal: 3,
@@ -392,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.gray,
   },
-  
+
   // 전화번호
   phoneSection: {
     paddingHorizontal: 3,
