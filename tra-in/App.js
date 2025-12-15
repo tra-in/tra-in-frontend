@@ -15,6 +15,7 @@ import ReservationDetailScreen from "./src/screens/ReservationDetailScreen";
 import CameraChatScreen from "./src/screens/CameraChatScreen";
 import BookingScreen from "./src/screens/BookingScreen";
 import LoginScreen from "./src/screens/LoginScreen";
+import PreferenceSurveyScreen from "./src/screens/PreferenceSurveyScreen";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -97,6 +98,24 @@ export default function App() {
       );
     }
 
+    // ⭐ 선호도 조사 화면 (AI 추천 진입 전)
+    if (activeScreen === "preferenceSurvey") {
+      return (
+        <PreferenceSurveyScreen
+          setActiveTab={handleSetActiveTab}
+          setActiveScreen={setActiveScreen}
+          searchParams={searchParams}
+          setSearchParams={setSearchParams}
+          setUserPreference={() => {}} // 지금은 비워둬도 OK
+          openTravelFlow={({ region }) => {
+            // 선호도 조사 완료 → AI 추천 상세 화면으로 이동
+            setSelectedSegment(region); // 추천 기준 지역
+            setActiveScreen("aiRecommendDetail");
+          }}
+        />
+      );
+    }
+
     if (activeScreen === "aiRecommendDetail") {
       const AiRecommendDetailScreen =
         require("./src/screens/AiRecommendDetailScreen").default;
@@ -106,6 +125,8 @@ export default function App() {
           setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           segment={selectedSegment ?? "부산 - 대전"}
+          searchParams={searchParams} // ✅ 추가
+          setSearchParams={setSearchParams} // ✅ (선택) 디테일에서 갱신/저장 필요하면
         />
       );
     }
@@ -135,8 +156,11 @@ export default function App() {
             setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedSegment={setSelectedSegment}
+            setSearchParams={setSearchParams} // ✅ 추가
+            userId={user?.id ?? 1} // ✅ 임시로 1 사용
           />
         );
+
       case "reservationList":
         return (
           <ReservationListScreen
