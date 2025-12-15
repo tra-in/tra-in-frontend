@@ -44,19 +44,19 @@ export default function LoginScreen({ onLogin }) {
 
           <View style={styles.buttonContainerInCard}>
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/login_btn.png")} style={styles.buttonImage} />
+              <Image source={require("../../assets/norm_sign_in_btn.png")} style={styles.buttonImage} />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/korail_btn.png")} style={styles.buttonImage} />
+              <Image source={require("../../assets/korail_sign_in_btn.png")} style={styles.buttonImage} />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/kakao_btn.png")} style={styles.buttonImage} />
+              <Image source={require("../../assets/kakao_sign_in_btn.png")} style={styles.buttonImage} />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/signup_btn.png")} style={styles.buttonImage} />
+              <Image source={require("../../assets/norm_sign_up_btn.png")} style={styles.buttonImage} />
             </Pressable>
           </View>
         </View>
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    width: '94%',
+    width: '100%',
     padding: 24,
     paddingBottom: 28,
     borderRadius: 16,
@@ -119,34 +119,6 @@ const styles = StyleSheet.create({
     marginTop: 24,
     alignItems: "center",
   },
-  korailButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#0A84FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  korailText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  korailHint: {
-    fontSize: 11,
-    color: "#777",
-    marginTop: 4,
-    textAlign: "center",
-  },
-   korailImage: {
-     width: 60,
-     height: 60,
-     resizeMode: "contain",
-   },
-   buttonContainer: {
-     width: '86%',
-     alignSelf: 'center',
-     marginTop:8,
-   },
    buttonContainerInCard: {
      width: '100%',
      alignItems: 'center',
