@@ -10,14 +10,24 @@ import RegionSelector from "../components/RegionSelector";
 import RegionPickerModal from "../components/RegionPickerModal";
 import BadgeMenuModal from "../components/BadgeMenuModal";
 import { generateDummyBadges } from "../data/dummyBadges";
-import { getDisplayRegionName, getDateRangeText, getMainRegion } from "../constants/badgeConstants";
+import {
+  getDisplayRegionName,
+  getDateRangeText,
+  getMainRegion,
+} from "../constants/badgeConstants";
 
-const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) => {
+const BadgeListScreen = ({
+  setActiveTab,
+  setSelectedBadge,
+  setActiveScreen,
+  initialFilter,
+}) => {
   const [selectedRegion, setSelectedRegion] = useState("전체");
   const [showRegionPicker, setShowRegionPicker] = useState(false);
   const [showBadgeMenu, setShowBadgeMenu] = useState(false);
   const [selectedBadgeForMenu, setSelectedBadgeForMenu] = useState(null);
   const [menuPosition, setMenuPosition] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(initialFilter || "all"); // "all" | "incomplete"
 
   // 더미 뱃지 데이터 (향후 API로 교체)
   const allBadges = generateDummyBadges();
@@ -26,14 +36,27 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
    * 선택한 지역에 해당하는 뱃지만 필터링
    * 뱃지의 regions 배열에서 하나라도 선택한 지역에 속하면 포함
    */
-  const filteredBadges = selectedRegion === "전체"
-    ? allBadges
-    : allBadges.filter(badge => {
-        return badge.regions.some(region => {
-          const mainRegion = getMainRegion(region);
-          return mainRegion === selectedRegion;
+  let filteredBadges =
+    selectedRegion === "전체"
+      ? allBadges
+      : allBadges.filter((badge) => {
+          return badge.regions.some((region) => {
+            const mainRegion = getMainRegion(region);
+            return mainRegion === selectedRegion;
+          });
         });
-      });
+
+  // 상태 필터 적용 (미완료만 보기)
+  if (statusFilter === "incomplete") {
+    filteredBadges = filteredBadges.filter(
+      (badge) =>
+        badge.status === "in_progress" || badge.status === "not_started"
+    );
+  } else if (statusFilter === "completed") {
+    filteredBadges = filteredBadges.filter(
+      (badge) => badge.status == "completed"
+    );
+  }
 
   /**
    * 뱃지 클릭 핸들러
@@ -62,7 +85,10 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
    */
   const handleEditBadge = () => {
     // TODO: 뱃지 수정 화면으로 이동
-    Alert.alert("뱃지 수정", `"${selectedBadgeForMenu?.title}" 수정 기능은 준비 중입니다.`);
+    Alert.alert(
+      "뱃지 수정",
+      `"${selectedBadgeForMenu?.title}" 수정 기능은 준비 중입니다.`
+    );
   };
 
   /**
@@ -74,13 +100,13 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
       `"${selectedBadgeForMenu?.title}" 여행을 삭제하시겠습니까?`,
       [
         { text: "취소", style: "cancel" },
-        { 
-          text: "삭제", 
+        {
+          text: "삭제",
           style: "destructive",
           onPress: () => {
             // TODO: 실제 삭제 로직 구현
             Alert.alert("삭제 완료", "여행이 삭제되었습니다.");
-          }
+          },
         },
       ]
     );
@@ -88,7 +114,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
 
   return (
     <View style={screenStyles.container}>
-      <ScreenHeader 
+      <ScreenHeader
         showBackButton={true}
         onBackPress={() => setActiveTab("profile")}
       />
@@ -98,7 +124,7 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <RegionSelector 
+        <RegionSelector
           region={selectedRegion}
           onPress={() => setShowRegionPicker(true)}
         />
@@ -106,26 +132,30 @@ const BadgeListScreen = ({ setActiveTab, setSelectedBadge, setActiveScreen }) =>
         <View style={styles.badgeGrid}>
           {filteredBadges.length > 0 ? (
             filteredBadges.map((badge) => (
-              <BadgeCard 
-                key={badge.id} 
+              <BadgeCard
+                key={badge.id}
                 badge={badge}
                 onPress={() => handleBadgePress(badge)}
-                onMenuPress={(position) => handleBadgeMenuPress(badge, position)}
+                onMenuPress={(position) =>
+                  handleBadgeMenuPress(badge, position)
+                }
               />
             ))
           ) : (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🧳</Text>
-              <Text style={styles.emptyTitle}>아직 여행하지 않은 지역이에요</Text>
+              <Text style={styles.emptyTitle}>
+                아직 여행하지 않은 지역이에요
+              </Text>
               <Text style={styles.emptyDescription}>
-                {selectedRegion}에서의{'\n'}새로운 여행을 시작해보세요!
+                {selectedRegion}에서의{"\n"}새로운 여행을 시작해보세요!
               </Text>
             </View>
           )}
         </View>
       </ScrollView>
 
-      <BottomNavigation activeTab="profile" setActiveTab={setActiveTab}/>
+      <BottomNavigation activeTab="profile" setActiveTab={setActiveTab} />
 
       {/* 지역 선택 모달 */}
       <RegionPickerModal

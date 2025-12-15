@@ -26,13 +26,24 @@ export default function App() {
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [previousScreen, setPreviousScreen] = useState(null);
+  const [badgeFilter, setBadgeFilter] = useState(null); // "incomplete" | null
+
+  // setActiveTab 함수를 래핑하여 필터 파라미터 처리
+  const handleSetActiveTab = (tab, options) => {
+    if (tab === "badgeList" && options?.filter) {
+      setBadgeFilter(options.filter);
+    } else if (tab !== "badgeList") {
+      setBadgeFilter(null);
+    }
+    setActiveTab(tab);
+  };
 
   const renderScreen = () => {
     // 예약 상세 화면
     if (activeScreen === "reservationDetail" && selectedReservation) {
       return (
         <ReservationDetailScreen
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           reservation={selectedReservation}
         />
@@ -43,7 +54,7 @@ export default function App() {
       return (
         <PlaceDetailScreen
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           place={selectedPlace}
           previousScreen={previousScreen}
@@ -55,7 +66,7 @@ export default function App() {
       return (
         <CameraChatScreen
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
         />
       );
@@ -65,7 +76,7 @@ export default function App() {
       return (
         <BadgeDetailScreen
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           setSelectedPlace={setSelectedPlace}
           badge={selectedBadge}
@@ -77,7 +88,7 @@ export default function App() {
       return (
         <BadgeCompletedScreen
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           setSelectedPlace={setSelectedPlace}
           badge={selectedBadge}
@@ -92,7 +103,7 @@ export default function App() {
 
       return (
         <AiRecommendDetailScreen
-          setActiveTab={setActiveTab}
+          setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           segment={selectedSegment ?? "부산 - 대전"}
         />
@@ -102,22 +113,26 @@ export default function App() {
     // 기본 탭 화면
     switch (activeTab) {
       case "home":
-        return <HomeScreen
-         setActiveTab={setActiveTab}
-         searchParams={searchParams}
-         setSearchParams={setSearchParams}
-         user={user}
-         />;
+        return (
+          <HomeScreen
+            setActiveTab={handleSetActiveTab}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+            user={user}
+          />
+        );
       case "booking":
-        return <BookingScreen
-          setActiveTab={setActiveTab}
-          searchParams={searchParams}
-          user={user}
-        />;
+        return (
+          <BookingScreen
+            setActiveTab={handleSetActiveTab}
+            searchParams={searchParams}
+            user={user}
+          />
+        );
       case "travel":
         return (
           <TravelScreen
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedSegment={setSelectedSegment}
           />
@@ -125,7 +140,7 @@ export default function App() {
       case "reservationList":
         return (
           <ReservationListScreen
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedReservation={setSelectedReservation}
           />
@@ -133,35 +148,38 @@ export default function App() {
       case "badgeList":
         return (
           <BadgeListScreen
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSetActiveTab}
             setSelectedBadge={setSelectedBadge}
             setActiveScreen={setActiveScreen}
             setPreviousScreen={setPreviousScreen}
+            initialFilter={badgeFilter}
           />
         );
       case "records":
         return (
           <RecordsScreen
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
           />
         );
       case "profile":
         return (
           <MyTicketsScreen
-            setActiveTab={setActiveTab}
+            setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedReservation={setSelectedReservation}
             setSelectedBadge={setSelectedBadge}
           />
         );
       default:
-        return <HomeScreen
-                   setActiveTab={setActiveTab}
-                   searchParams={searchParams}
-                   setSearchParams={setSearchParams}
-                   user={user}
-                 />;
+        return (
+          <HomeScreen
+            setActiveTab={handleSetActiveTab}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
+            user={user}
+          />
+        );
     }
   };
 

@@ -254,7 +254,8 @@ const MyTicketsScreen = ({
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
               onPress={() => {
-                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveTab)
+                  setActiveTab("badgeList", { filter: "completed" });
                 if (setActiveScreen) setActiveScreen(null);
               }}
             >
@@ -292,7 +293,8 @@ const MyTicketsScreen = ({
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
               onPress={() => {
-                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveTab)
+                  setActiveTab("badgeList", { filter: "incomplete" });
                 if (setActiveScreen) setActiveScreen(null);
               }}
             >
