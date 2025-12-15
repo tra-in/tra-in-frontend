@@ -15,6 +15,10 @@ import WaypointActionButton from "../components/WaypointActionButton";
 import { Colors } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { IMAGES, AVATAR } from "../constants/images";
+import {
+  NaverMapView,
+  NaverMapMarkerOverlay,
+} from "@mj-studio/react-native-naver-map";
 
 const { width } = Dimensions.get("window");
 
@@ -114,6 +118,28 @@ export default function AiRecommendDetailScreen({
   const [waypointsState, setWaypointsState] = useState(initialWaypoints);
   const scrollRef = useRef(null);
 
+  // ✅ 임시 좌표 (대전역 근처 대략)
+  // 실제 서비스에서는 propWaypoints에 latitude/longitude를 같이 내려주는 걸 추천!
+  const base = { latitude: 36.3258, longitude: 127.4353 }; // 대전역 근처(대략)
+
+  const waypointsWithCoords = useMemo(() => {
+    return waypointsState.map((w, idx) => {
+      // 1) 만약 wp에 실제 좌표가 있으면 그걸 사용
+      if (w.latitude && w.longitude) {
+        return { ...w, latitude: w.latitude, longitude: w.longitude };
+      }
+
+      // 2) 없으면 임시로 base 주변에 조금씩 흩뿌려서 마커가 보이게
+      const dLat = 0.0012 * idx;
+      const dLng = 0.001 * idx;
+      return {
+        ...w,
+        latitude: base.latitude + dLat,
+        longitude: base.longitude + dLng,
+      };
+    });
+  }, [waypointsState]);
+
   const handleBack = () => {
     if (setActiveTab) setActiveTab("travel");
     if (setActiveScreen) setActiveScreen(null);
@@ -162,24 +188,24 @@ export default function AiRecommendDetailScreen({
       <View style={styles.container}>
         {/* 지도 영역: 카카오맵 API로 대체 예정 */}
         <View style={styles.mapWrap}>
-          {/* TODO: 카카오맵 뷰로 교체 */}
-          <View
-            style={[
-              styles.mapImg,
-              {
-                backgroundColor: Colors.korailSilver,
-                justifyContent: "center",
-                alignItems: "center",
-              },
-            ]}
-          >
-            <Text style={{ color: Colors.korailGray }}>[카카오맵 영역]</Text>
-          </View>
+          <NaverMapView
+            style={styles.mapImg}
+            initialCamera={{
+              latitude: 36.3326,
+              longitude: 127.4349,
+              zoom: 14,
+            }}
+            isShowZoomControls={true} // + / - 버튼 (Android)
+            isShowCompass={false}
+            isShowLocationButton={false}
+          />
+
           <View style={styles.routeSummary}>
             <Image source={imgAvatar} style={styles.avatarSmall} />
             <Text style={styles.routeText}>{segment}</Text>
           </View>
         </View>
+
         {/* 경유지 리스트 헤더 + 편집 아이콘 */}
         <View style={styles.listHeaderRow}>
           <View style={{ flex: 1 }} />
