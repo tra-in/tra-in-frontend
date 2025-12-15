@@ -13,12 +13,12 @@ export default function PreferenceSurveyScreen({
 }) {
   const options = useMemo(
     () => [
-      { key: "힐링", label: "힐링" },
-      { key: "액티비티", label: "액티비티" },
-      { key: "맛집", label: "맛집" },
-      { key: "쇼핑", label: "쇼핑" },
-      { key: "자연", label: "자연" },
-      { key: "문화", label: "문화" },
+      { key: "relaxation", label: "힐링" },
+      { key: "activity", label: "액티비티" },
+      { key: "food", label: "맛집" },
+      { key: "shopping", label: "쇼핑" },
+      { key: "nature", label: "자연" },
+      { key: "culture", label: "문화" },
     ],
     []
   );

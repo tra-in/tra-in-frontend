@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -74,9 +75,9 @@ export default function TravelScreen({
   const [stopoverModalVisible, setStopoverModalVisible] = useState(false);
   const [selectedLeg, setSelectedLeg] = useState("LEG1");
 
-  // ✅ ticketId 하나만 사용 (prevTicketId 제거)
+  // ✅ ticketId 하나만 사용
   const [trip, setTrip] = useState({
-    ticketId: null, // ✅ 반드시 백엔드에서 내려온 ticketId 1개만 사용
+    ticketId: null, // ✅ 백엔드 latest-main 응답의 ticketId(묶음 ticket_id)
     from: "",
     via: "",
     to: "",
@@ -91,6 +92,8 @@ export default function TravelScreen({
         setLoading(true);
         setErrorMsg("");
 
+        // ✅ 백엔드 컨트롤러 기준: @RequestMapping("/api") + @GetMapping("/user-tickets/latest-main")
+        // => GET /api/user-tickets/latest-main?userId=1
         const res = await fetch(
           `${API_BASE}/user-tickets/latest-main?userId=${userId}`
         );
@@ -114,8 +117,21 @@ export default function TravelScreen({
         }
 
         const data = await res.json();
+        console.log("[latest-main raw data]", data);
+
         const legs = data?.legs ?? [];
-        if (legs.length === 0) return;
+        if (legs.length === 0) {
+          setTrip({
+            ticketId: null,
+            from: "",
+            via: "",
+            to: "",
+            dateLabel: "",
+            routeLabel: "",
+            hasStopover: false,
+          });
+          return;
+        }
 
         const from = legs[0].originStation;
         const to = legs[legs.length - 1].destStation;
@@ -125,9 +141,12 @@ export default function TravelScreen({
         const hasStopover = legs.length >= 2;
         const via = hasStopover ? legs[0].destStation : "";
 
-        // ✅ ticketId는 백엔드 응답의 ticketId 하나만 저장
+        // ✅ 이제 백엔드에서 dto.ticketId를 내려준다고 가정
+        const extractedTicketId = data?.ticketId ?? null;
+        console.log("[latest-main extractedTicketId]", extractedTicketId);
+
         setTrip({
-          ticketId: data?.ticketId ?? null,
+          ticketId: extractedTicketId,
           from,
           via,
           to,
@@ -154,12 +173,16 @@ export default function TravelScreen({
     fetchLatestTrip();
   }, [userId]);
 
-  // ✅ AI 추천 버튼 (직행 or 경유 모달 띄우기)
+  // ✅ AI 추천 버튼
   const handleAiPress = () => {
     if (!trip.from || !trip.to) return;
 
     if (!trip.ticketId) {
       console.log("[AI] ticketId missing:", trip);
+      Alert.alert(
+        "오류",
+        "예매 ID(ticketId)를 가져오지 못했어요.\n(백엔드 latest-main 응답에 ticketId가 포함되어 있는지 확인해줘)"
+      );
       return;
     }
 
@@ -169,12 +192,19 @@ export default function TravelScreen({
       return;
     }
 
-    // ✅ 직행: ticketId는 항상 trip.ticketId
+    // ✅ 직행
     setSearchParams?.({
       userId,
       ticketId: trip.ticketId,
       destName: trip.to,
       isHopper: false,
+      // 아래는 디버깅/표시용으로 필요하면 같이 넘겨도 됨
+      routeLabel: trip.routeLabel,
+      dateLabel: trip.dateLabel,
+      from: trip.from,
+      to: trip.to,
+      via: trip.via,
+      hasStopover: trip.hasStopover,
     });
 
     setActiveScreen?.("preferenceSurvey");
@@ -185,6 +215,7 @@ export default function TravelScreen({
   const handleConfirmLeg = (legKey) => {
     if (!trip.ticketId) {
       console.log("[AI] ticketId missing:", trip);
+      Alert.alert("오류", "ticketId가 없습니다.");
       return;
     }
 
@@ -198,12 +229,18 @@ export default function TravelScreen({
         : `${trip.via} - ${trip.to}`;
     setSelectedSegment?.(segment);
 
-    // ✅ ticketId는 경유여도 동일하게 저장해야 함
     setSearchParams?.({
       userId,
       ticketId: trip.ticketId, // ✅ 항상 동일
       destName: dest, // ✅ LEG에 따라 달라짐
       isHopper: true,
+      segment,
+      routeLabel: trip.routeLabel,
+      dateLabel: trip.dateLabel,
+      from: trip.from,
+      to: trip.to,
+      via: trip.via,
+      hasStopover: trip.hasStopover,
     });
 
     setActiveScreen?.("preferenceSurvey");

@@ -225,7 +225,7 @@ export default function AiRecommendDetailScreen({
         // POST /api/user-picks  (body: { userId, ticketId, destStation, picks: [...] })
         setSaving(true);
 
-        const saveRes = await fetch(`${API_BASE}/user-picks/`, {
+        const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
