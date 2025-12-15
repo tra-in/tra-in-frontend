@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { View,  Text,  TextInput,  StyleSheet,  Pressable,  KeyboardAvoidingView,  Platform,  Image,} from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+} from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 
 export default function LoginScreen({ onLogin }) {
@@ -7,7 +16,7 @@ export default function LoginScreen({ onLogin }) {
   const [password, setPassword] = useState("");
 
   const handleKorailLogin = () => {
-    const fakeUser = { id: 1, name: "박서훈" };
+    const fakeUser = { id: 1, name: "홍길동" };
     onLogin(fakeUser);
   };
 
@@ -44,19 +53,31 @@ export default function LoginScreen({ onLogin }) {
 
           <View style={styles.buttonContainerInCard}>
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/norm_sign_in_btn.png")} style={styles.buttonImage} />
+              <Image
+                source={require("../../assets/norm_sign_in_btn.png")}
+                style={styles.buttonImage}
+              />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/korail_sign_in_btn.png")} style={styles.buttonImage} />
+              <Image
+                source={require("../../assets/korail_sign_in_btn.png")}
+                style={styles.buttonImage}
+              />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/kakao_sign_in_btn.png")} style={styles.buttonImage} />
+              <Image
+                source={require("../../assets/kakao_sign_in_btn.png")}
+                style={styles.buttonImage}
+              />
             </Pressable>
 
             <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/norm_sign_up_btn.png")} style={styles.buttonImage} />
+              <Image
+                source={require("../../assets/norm_sign_up_btn.png")}
+                style={styles.buttonImage}
+              />
             </Pressable>
           </View>
         </View>
@@ -74,10 +95,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: "center",
-    alignItems: 'center',
+    alignItems: "center",
   },
   card: {
-    width: '100%',
+    width: "100%",
     padding: 24,
     paddingBottom: 28,
     borderRadius: 16,
@@ -119,21 +140,21 @@ const styles = StyleSheet.create({
     marginTop: 24,
     alignItems: "center",
   },
-   buttonContainerInCard: {
-     width: '100%',
-     alignItems: 'center',
-     marginTop: 20,
-   },
-   figmaBtn: {
-     width: '100%',
-     height: 44,
-     borderRadius: 20,
-     overflow: 'hidden',
-     marginVertical: 1,
-   },
-   buttonImage: {
-     width: '100%',
-     height: '100%',
-     resizeMode: 'contain',
-   },
+  buttonContainerInCard: {
+    width: "100%",
+    alignItems: "center",
+    marginTop: 20,
+  },
+  figmaBtn: {
+    width: "100%",
+    height: 44,
+    borderRadius: 20,
+    overflow: "hidden",
+    marginVertical: 1,
+  },
+  buttonImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
 });

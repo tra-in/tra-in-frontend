@@ -28,7 +28,12 @@ const TravelPlanCard = ({
     ]}
   >
     <View style={styles.planCardTextWrap}>
-      <Text style={[styles.greeting, { fontSize: 13 * scale }]}>
+      <Text
+        style={[
+          styles.greeting,
+          { fontSize: 13 * scale, paddingLeft: 3 * scale },
+        ]}
+      >
         {" "}
         {userName}님,{" "}
       </Text>
