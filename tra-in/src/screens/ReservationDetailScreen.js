@@ -1,12 +1,23 @@
+// src/screens/ReservationDetailScreen.js
 import React from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { screenStyles } from "../constants/screenStyles";
-import { Colors, Spacing } from "../constants/theme";
+import { Colors } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 
-const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation }) => {
+const ReservationDetailScreen = ({
+  setActiveTab,
+  setActiveScreen,
+  setSearchParams, // ✅ 추가: AiRecommendDetailScreen에 넘길 params setter
+  reservation,
+}) => {
   const data = reservation;
 
   const handleTabChange = (newTab) => {
@@ -14,55 +25,92 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
     setActiveTab(newTab);
   };
 
-  // 역 이름 길이에 따른 폰트 크기 계산
   const getStationNameFontSize = (stationName) => {
     const length = stationName.length;
     if (length <= 2) return 36;
     if (length === 3) return 36;
     if (length === 4) return 28;
     if (length === 5) return 22;
-    return 18; // 6글자 이상
+    return 18;
+  };
+
+  // ✅ 구간 AI 추천 이동
+  const goAiRecommendForSegment = ({ from, to }) => {
+    const userId = data?.userId ?? 1;
+    const ticketId = data?.ticketId ?? data?.id ?? null;
+
+    const routeLabel = `${data?.departure ?? ""} - ${data?.arrival ?? ""}`;
+    const segment = `${from} - ${to}`;
+
+    const params = {
+      userId,
+      ticketId,
+      destName: to, // ✅ 도착역 기준으로 추천
+      travelPreference: "자연", // ✅ 없으면 기본값 (원하면 data에서 받아오게 바꿀 수 있음)
+      routeLabel, // ✅ 전체 구간 표시용
+      segment, // ✅ 현재 구간 표시용(최우선)
+      from,
+      to,
+    };
+
+    setSearchParams?.(params);
+    setActiveTab?.("travel");
+    setActiveScreen?.("aiRecommendDetail");
   };
 
   return (
     <View style={screenStyles.container}>
-      <ScreenHeader 
-        showBackButton={true} 
-        title="트레:in(人)" 
-        onBackPress={() => setActiveScreen(null)} 
+      <ScreenHeader
+        showBackButton={true}
+        title="트레:in(人)"
+        onBackPress={() => setActiveScreen(null)}
       />
+
       <ScrollView
         style={screenStyles.content}
-        contentContainerStyle={{ 
-          alignItems: "center", 
-          paddingTop: 24, 
-          paddingBottom: 100
+        contentContainerStyle={{
+          alignItems: "center",
+          paddingTop: 24,
+          paddingBottom: 100,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.timelineCard}>
           <Text style={styles.date}>{data.date}</Text>
-          {/* compute transfers to render: prefer explicit legs if provided, else normalize existing transfers */}
+
+          {/* compute transfers */}
           {(() => {
             const buildFromLegs = (legs = []) => {
-              const formatTime = (dt) => dt ? (dt.slice(11,16)) : "";
+              const formatTime = (dt) => (dt ? dt.slice(11, 16) : "");
               const formatDate = (dt) => {
                 if (!dt) return "";
-                const d = dt.slice(0,10).replace(/-/g,'.');
-                const dayKor = ['일','월','화','수','목','금','토'][new Date(dt).getDay()];
-                return `${d}${dayKor ? ` (${dayKor})` : ''}`;
+                const d = dt.slice(0, 10).replace(/-/g, ".");
+                const dayKor = ["일", "월", "화", "수", "목", "금", "토"][
+                  new Date(dt).getDay()
+                ];
+                return `${d}${dayKor ? ` (${dayKor})` : ""}`;
               };
               const out = [];
               for (let i = 0; i < legs.length - 1; i++) {
                 const arrivalLeg = legs[i];
-                const departureLeg = legs[i+1];
+                const departureLeg = legs[i + 1];
                 out.push({
                   station: arrivalLeg.destStation,
-                  arrivalTime: arrivalLeg.arrivalTime ? formatTime(arrivalLeg.arrivalTime) : "",
-                  arrivalDate: arrivalLeg.arrivalTime ? formatDate(arrivalLeg.arrivalTime) : "",
-                  departureTime: departureLeg && departureLeg.departureTime ? formatTime(departureLeg.departureTime) : "",
-                  departureDate: departureLeg && departureLeg.departureTime ? formatDate(departureLeg.departureTime) : "",
+                  arrivalTime: arrivalLeg.arrivalTime
+                    ? formatTime(arrivalLeg.arrivalTime)
+                    : "",
+                  arrivalDate: arrivalLeg.arrivalTime
+                    ? formatDate(arrivalLeg.arrivalTime)
+                    : "",
+                  departureTime:
+                    departureLeg && departureLeg.departureTime
+                      ? formatTime(departureLeg.departureTime)
+                      : "",
+                  departureDate:
+                    departureLeg && departureLeg.departureTime
+                      ? formatDate(departureLeg.departureTime)
+                      : "",
                   seat: arrivalLeg.seatCode,
                   carNo: arrivalLeg.carNo,
                 });
@@ -71,74 +119,84 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
             };
 
             const normalizeTransfers = (transfers = []) => {
-              return transfers.map((t, idx) => {
+              return transfers.map((t) => {
                 const arrivalTime = t.arrivalTime || t.time || "";
                 const departureTime = t.departureTime || "";
                 const arrivalDate = t.arrivalDate || t.date || data.date || "";
-                const departureDate = t.departureDate || t.date || data.date || "";
-                // avoid showing identical times twice
+                const departureDate =
+                  t.departureDate || t.date || data.date || "";
                 let aT = arrivalTime;
                 let dT = departureTime;
-                if (aT && dT && aT === dT) {
-                  // prefer arrival (show above) and hide duplicate departure
-                  dT = "";
-                }
+                if (aT && dT && aT === dT) dT = "";
                 return {
                   station: t.station,
                   arrivalTime: aT,
-                  arrivalDate: arrivalDate,
+                  arrivalDate,
                   departureTime: dT,
-                  departureDate: departureDate,
+                  departureDate,
                   seat: t.seat || t.seatCode || "",
                   carNo: t.carNo || null,
                 };
               });
             };
 
-            const computedTransfers = Array.isArray(data.legs) && data.legs.length > 0
-              ? buildFromLegs(data.legs)
-              : normalizeTransfers(data.transfers || []);
+            const computedTransfers =
+              Array.isArray(data.legs) && data.legs.length > 0
+                ? buildFromLegs(data.legs)
+                : normalizeTransfers(data.transfers || []);
 
-            // expose computedTransfers to the render by attaching to a local variable via closure
-            // we'll use this variable in the map below by referencing `__computedTransfers`
-            // eslint-disable-next-line no-underscore-dangle
             global.__computedTransfers = computedTransfers;
             return null;
           })()}
-          
-          <View style={styles.timelineWrap}>
 
+          {/* ✅ 구간(역 리스트) 만들기: 출발 -> 경유들 -> 도착 */}
+          {(() => {
+            const transfers =
+              global.__computedTransfers || data.transfers || [];
+            const stops = [
+              data.departure,
+              ...transfers.map((t) => t.station),
+              data.arrival,
+            ];
+
+            global.__stops = stops;
+            return null;
+          })()}
+
+          <View style={styles.timelineWrap}>
             {/* 출발지 */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeft}>
-                {/* no arrival for departure station */}
                 <Text
                   style={[
                     styles.stationName,
-                    { fontSize: getStationNameFontSize(data.departure) }
+                    { fontSize: getStationNameFontSize(data.departure) },
                   ]}
                   numberOfLines={1}
                 >
                   {data.departure}
                 </Text>
-                {/* Departure time below station name */}
                 {data.departureTime ? (
                   <>
-                    <Text style={[styles.stationTime, { marginTop: 8 }]}>{data.departureTime}</Text>
-                    <Text style={styles.stationDate}>{data.departureDate || data.date}</Text>
+                    <Text style={[styles.stationTime, { marginTop: 8 }]}>
+                      {data.departureTime}
+                    </Text>
+                    <Text style={styles.stationDate}>
+                      {data.departureDate || data.date}
+                    </Text>
                   </>
                 ) : null}
               </View>
               <View style={styles.timelineRight}>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoLabel}>출발지</Text>
-                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">
+                  <Text
+                    style={styles.infoValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {data.departure}
                   </Text>
-                  {/* 좌석 정보 */}
-                  {data.departureCarNo && data.departureSeat && (
-                    <Text style={styles.infoSubValue}>{`${data.departureCarNo}호차 ${data.departureSeat}`}</Text>
-                  )}
                   <TouchableOpacity>
                     <Text style={styles.infoLink}>더 알아보기</Text>
                   </TouchableOpacity>
@@ -146,113 +204,172 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
               </View>
             </View>
 
-            {/* 출발-1경유 구간: 항상 호차 좌석 출력 */}
+            {/* ✅ 출발 -> 첫 경유(or 도착) 구간 */}
             <View style={styles.segmentContainer}>
               <View style={styles.timelineLine} />
               <View style={styles.seatBadge}>
                 <Text style={styles.seatBadgeText}>
-                  {data.departureCarNo && data.departureSeat
-                    ? `${data.departureCarNo}호차 ${data.departureSeat}`
-                    : (data.transfers[0] && data.transfers[0].carNo && data.transfers[0].seat
-                        ? `${data.transfers[0].carNo}호차 ${data.transfers[0].seat}`
-                        : data.seat)}
+                  {data.transfers?.[0]?.carNo && data.transfers?.[0]?.seat
+                    ? `${data.transfers[0].carNo}호차 ${data.transfers[0].seat}`
+                    : data.seat}
                 </Text>
               </View>
+
+              {/* ✅ AI 일정 추천 버튼 (서울->대전이면 대전 추천) */}
+              <TouchableOpacity
+                style={styles.aiBtn}
+                activeOpacity={0.85}
+                onPress={() =>
+                  goAiRecommendForSegment({
+                    from: global.__stops?.[0],
+                    to: global.__stops?.[1],
+                  })
+                }
+              >
+                <Text style={styles.aiBtnText}>AI 일정 추천</Text>
+              </TouchableOpacity>
             </View>
 
             {/* 경유지들 */}
-            {(global.__computedTransfers || data.transfers || []).map((transfer, index) => (
-              <React.Fragment key={`${transfer.station}-${index}`}>
-                <View style={styles.timelineRow}>
-                  <View style={styles.timelineLeft}>
-                    {(() => {
-                      // Prefer explicit arrivalTime/departureTime produced by the formatter.
-                      // Avoid falling back to legacy `time` which can cause duplicate values.
-                      const arrivalTime = transfer.arrivalTime || "";
-                      const arrivalDate = transfer.arrivalDate || transfer.date || data.date || "";
-                      const departureTime = transfer.departureTime || "";
-                      const departureDate = transfer.departureDate || transfer.date || data.date || "";
-                      return (
-                        <>
-                          {arrivalTime ? (
-                            <>
-                              <Text style={styles.stationTime}>{arrivalTime}</Text>
-                              <Text style={styles.stationDate}>{arrivalDate}</Text>
-                            </>
-                          ) : null}
-                          <Text
-                            style={[
-                              styles.stationName,
-                              { fontSize: getStationNameFontSize(transfer.station), marginTop: arrivalTime ? 8 : 0 }
-                            ]}
-                            numberOfLines={1}
-                          >
-                            {transfer.station}
-                          </Text>
-                          {departureTime ? (
-                            <>
-                              <Text style={[styles.stationTime, { marginTop: 8 }]}>{departureTime}</Text>
-                              <Text style={styles.stationDate}>{departureDate}</Text>
-                            </>
-                          ) : null}
-                        </>
-                      );
-                    })()}
-                  </View>
-                  <View style={styles.timelineRight}>
-                    <View style={styles.infoCard}>
-                      <Text style={styles.infoLabel}>경유지</Text>
-                      <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">
-                        {transfer.station}
-                      </Text>
-                      {/* 경유지 infoCard에는 좌석 정보 출력 안함 */}
-                      <TouchableOpacity>
-                        <Text style={styles.infoLink}>더 알아보기</Text>
-                      </TouchableOpacity>
+            {(global.__computedTransfers || data.transfers || []).map(
+              (transfer, index) => (
+                <React.Fragment key={`${transfer.station}-${index}`}>
+                  <View style={styles.timelineRow}>
+                    <View style={styles.timelineLeft}>
+                      {(() => {
+                        const arrivalTime = transfer.arrivalTime || "";
+                        const arrivalDate =
+                          transfer.arrivalDate ||
+                          transfer.date ||
+                          data.date ||
+                          "";
+                        const departureTime = transfer.departureTime || "";
+                        const departureDate =
+                          transfer.departureDate ||
+                          transfer.date ||
+                          data.date ||
+                          "";
+                        return (
+                          <>
+                            {arrivalTime ? (
+                              <>
+                                <Text style={styles.stationTime}>
+                                  {arrivalTime}
+                                </Text>
+                                <Text style={styles.stationDate}>
+                                  {arrivalDate}
+                                </Text>
+                              </>
+                            ) : null}
+                            <Text
+                              style={[
+                                styles.stationName,
+                                {
+                                  fontSize: getStationNameFontSize(
+                                    transfer.station
+                                  ),
+                                  marginTop: arrivalTime ? 8 : 0,
+                                },
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {transfer.station}
+                            </Text>
+                            {departureTime ? (
+                              <>
+                                <Text
+                                  style={[styles.stationTime, { marginTop: 8 }]}
+                                >
+                                  {departureTime}
+                                </Text>
+                                <Text style={styles.stationDate}>
+                                  {departureDate}
+                                </Text>
+                              </>
+                            ) : null}
+                          </>
+                        );
+                      })()}
+                    </View>
+                    <View style={styles.timelineRight}>
+                      <View style={styles.infoCard}>
+                        <Text style={styles.infoLabel}>경유지</Text>
+                        <Text
+                          style={styles.infoValue}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {transfer.station}
+                        </Text>
+                        <TouchableOpacity>
+                          <Text style={styles.infoLink}>더 알아보기</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.segmentContainer}>
-                  <View style={styles.timelineLine} />
-                  <View style={styles.seatBadge}>
-                    <Text style={styles.seatBadgeText}>{transfer.carNo && transfer.seat ? `${transfer.carNo}호차 ${transfer.seat}` : transfer.seat}</Text>
+                  {/* ✅ 경유지 -> 다음 정차역(다음 경유 or 도착) 구간 + AI 버튼 */}
+                  <View style={styles.segmentContainer}>
+                    <View style={styles.timelineLine} />
+                    <View style={styles.seatBadge}>
+                      <Text style={styles.seatBadgeText}>
+                        {transfer.carNo && transfer.seat
+                          ? `${transfer.carNo}호차 ${transfer.seat}`
+                          : transfer.seat}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.aiBtn}
+                      activeOpacity={0.85}
+                      onPress={() =>
+                        goAiRecommendForSegment({
+                          from: global.__stops?.[index + 1],
+                          to: global.__stops?.[index + 2],
+                        })
+                      }
+                    >
+                      <Text style={styles.aiBtnText}>AI 일정 추천</Text>
+                    </TouchableOpacity>
                   </View>
-                </View>
-              </React.Fragment>
-            ))}
+                </React.Fragment>
+              )
+            )}
 
             {/* 도착지 */}
             <View style={styles.timelineRow}>
               <View style={styles.timelineLeft}>
-                {/* Arrival time above station name */}
                 {data.arrivalTime ? (
                   <>
                     <Text style={styles.stationTime}>{data.arrivalTime}</Text>
-                    <Text style={styles.stationDate}>{data.arrivalDate || data.date}</Text>
+                    <Text style={styles.stationDate}>
+                      {data.arrivalDate || data.date}
+                    </Text>
                   </>
                 ) : null}
                 <Text
                   style={[
                     styles.stationName,
-                    { fontSize: getStationNameFontSize(data.arrival), marginTop: data.arrivalTime ? 8 : 0 }
+                    {
+                      fontSize: getStationNameFontSize(data.arrival),
+                      marginTop: data.arrivalTime ? 8 : 0,
+                    },
                   ]}
                   numberOfLines={1}
                 >
                   {data.arrival}
                 </Text>
-                {/* no departure for final station */}
               </View>
               <View style={styles.timelineRight}>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoLabel}>도착지</Text>
-                  <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">
+                  <Text
+                    style={styles.infoValue}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {data.arrival}
                   </Text>
-                  {/* 좌석 정보 */}
-                  {data.arrivalCarNo && data.arrivalSeat && (
-                    <Text style={styles.infoSubValue}>{`${data.arrivalCarNo}호차 ${data.arrivalSeat}`}</Text>
-                  )}
                   <TouchableOpacity>
                     <Text style={styles.infoLink}>더 알아보기</Text>
                   </TouchableOpacity>
@@ -262,10 +379,8 @@ const ReservationDetailScreen = ({ setActiveTab, setActiveScreen, reservation })
           </View>
         </View>
       </ScrollView>
-      <BottomNavigation 
-        activeTab="profile" 
-        setActiveTab={handleTabChange}
-      />
+
+      <BottomNavigation activeTab="profile" setActiveTab={handleTabChange} />
     </View>
   );
 };
@@ -276,16 +391,6 @@ const styles = StyleSheet.create({
     color: Colors.korailGray,
     textAlign: "center",
     marginTop: 2,
-  },
-  debugBox: {
-    marginVertical: 8,
-    paddingHorizontal: 8,
-  },
-  debugText: {
-    fontSize: 12,
-    color: Colors.korailGray,
-    textAlign: 'left',
-    marginBottom: 2,
   },
   infoSubValue: {
     fontSize: 15,
@@ -377,7 +482,7 @@ const styles = StyleSheet.create({
     color: Colors.black,
     textAlign: "center",
     flexShrink: 1,
-    width: '100%',
+    width: "100%",
   },
   infoLink: {
     fontFamily: "Overpass",
@@ -386,12 +491,14 @@ const styles = StyleSheet.create({
     color: Colors.korailBlue,
     textAlign: "center",
   },
+
   segmentContainer: {
     flexDirection: "row",
     alignItems: "center",
     paddingLeft: 50,
     marginVertical: 16,
-    gap: 16,
+    gap: 12,
+    flexWrap: "wrap",
   },
   timelineLine: {
     width: 2,
@@ -411,6 +518,20 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.white,
     textAlign: "center",
+  },
+
+  // ✅ AI 버튼 스타일
+  aiBtn: {
+    backgroundColor: "#FFE5EF",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  aiBtnText: {
+    fontFamily: "Pretendard Variable",
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#FF81B9",
   },
 });
 

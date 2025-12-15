@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -20,7 +21,7 @@ import TravelPlanCard from "../components/TravelPlanCard";
 import StopoverSelectModal from "../components/StopoverSelectModal";
 import { API_BASE } from "../config/api";
 
-// 더미 유지
+// 더미 데이터 유지
 const places1 = [
   { name: "한밭수목원", region: "대전광역시 서구", image: IMAGES.places1_1 },
   {
@@ -57,11 +58,13 @@ function formatKoreanDate(isoDateTimeStr) {
   return `${yyyy}.${mm}.${dd} (${day})`;
 }
 
-const TravelScreen = ({
+export default function TravelScreen({
   setActiveTab,
   setActiveScreen,
   setSelectedSegment,
-}) => {
+  setSearchParams,
+  userId = 1,
+}) {
   const { width: windowWidth } = useWindowDimensions();
   const baseWidth = 375;
   const scale = windowWidth / baseWidth;
@@ -69,8 +72,12 @@ const TravelScreen = ({
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ✅ 메인에 보여줄 최신 여행 1건만 저장
+  const [stopoverModalVisible, setStopoverModalVisible] = useState(false);
+  const [selectedLeg, setSelectedLeg] = useState("LEG1");
+
+  // ✅ ticketId 하나만 사용
   const [trip, setTrip] = useState({
+    ticketId: null, // ✅ 백엔드 latest-main 응답의 ticketId(묶음 ticket_id)
     from: "",
     via: "",
     to: "",
@@ -79,25 +86,21 @@ const TravelScreen = ({
     hasStopover: false,
   });
 
-  // 모달 상태
-  const [stopoverModalVisible, setStopoverModalVisible] = useState(false);
-  const [selectedLeg, setSelectedLeg] = useState("LEG1");
-
-  // ✅ 최신 1건 API 호출 → 바로 trip 세팅
   useEffect(() => {
     const fetchLatestTrip = async () => {
       try {
         setLoading(true);
         setErrorMsg("");
 
-        const userId = 1;
+        // ✅ 백엔드 컨트롤러 기준: @RequestMapping("/api") + @GetMapping("/user-tickets/latest-main")
+        // => GET /api/user-tickets/latest-main?userId=1
         const res = await fetch(
           `${API_BASE}/user-tickets/latest-main?userId=${userId}`
         );
 
         if (res.status === 204) {
-          // 예매 없음
           setTrip({
+            ticketId: null,
             from: "",
             via: "",
             to: "",
@@ -114,11 +117,12 @@ const TravelScreen = ({
         }
 
         const data = await res.json();
+        console.log("[latest-main raw data]", data);
 
-        // ✅ 여기! data -> trip 변환 로직 들어가는 자리
         const legs = data?.legs ?? [];
         if (legs.length === 0) {
           setTrip({
+            ticketId: null,
             from: "",
             via: "",
             to: "",
@@ -132,20 +136,28 @@ const TravelScreen = ({
         const from = legs[0].originStation;
         const to = legs[legs.length - 1].destStation;
         const dateLabel = formatKoreanDate(legs[0].departureTime);
-
-        // 메인 화면 표시는 “출발-도착”만 (너 요구사항)
         const routeLabel = `${from} - ${to}`;
 
-        // 모달 띄울지 판단은 legs 길이로!
         const hasStopover = legs.length >= 2;
-
-        // 경유지는 모달에서 구간 표시할 때만 필요
         const via = hasStopover ? legs[0].destStation : "";
 
-        setTrip({ from, via, to, dateLabel, routeLabel, hasStopover });
+        // ✅ 이제 백엔드에서 dto.ticketId를 내려준다고 가정
+        const extractedTicketId = data?.ticketId ?? null;
+        console.log("[latest-main extractedTicketId]", extractedTicketId);
+
+        setTrip({
+          ticketId: extractedTicketId,
+          from,
+          via,
+          to,
+          dateLabel,
+          routeLabel,
+          hasStopover,
+        });
       } catch (e) {
         setErrorMsg(e?.message ?? "최신 예매를 불러오지 못했어요.");
         setTrip({
+          ticketId: null,
           from: "",
           via: "",
           to: "",
@@ -159,30 +171,80 @@ const TravelScreen = ({
     };
 
     fetchLatestTrip();
-  }, []);
+  }, [userId]);
 
+  // ✅ AI 추천 버튼
   const handleAiPress = () => {
     if (!trip.from || !trip.to) return;
 
+    if (!trip.ticketId) {
+      console.log("[AI] ticketId missing:", trip);
+      Alert.alert(
+        "오류",
+        "예매 ID(ticketId)를 가져오지 못했어요.\n(백엔드 latest-main 응답에 ticketId가 포함되어 있는지 확인해줘)"
+      );
+      return;
+    }
+
+    // 경유 있으면 모달
     if (trip.hasStopover) {
       setStopoverModalVisible(true);
       return;
     }
 
-    setSelectedSegment?.(`${trip.from} - ${trip.to}`);
-    setActiveScreen?.("aiRecommendDetail");
+    // ✅ 직행
+    setSearchParams?.({
+      userId,
+      ticketId: trip.ticketId,
+      destName: trip.to,
+      isHopper: false,
+      // 아래는 디버깅/표시용으로 필요하면 같이 넘겨도 됨
+      routeLabel: trip.routeLabel,
+      dateLabel: trip.dateLabel,
+      from: trip.from,
+      to: trip.to,
+      via: trip.via,
+      hasStopover: trip.hasStopover,
+    });
+
+    setActiveScreen?.("preferenceSurvey");
+    setActiveTab?.("travel");
   };
 
+  // ✅ 경유: LEG1/LEG2에 따라 destName만 다르게, ticketId는 동일
   const handleConfirmLeg = (legKey) => {
+    if (!trip.ticketId) {
+      console.log("[AI] ticketId missing:", trip);
+      Alert.alert("오류", "ticketId가 없습니다.");
+      return;
+    }
+
     setStopoverModalVisible(false);
+
+    const dest = legKey === "LEG1" ? trip.via : trip.to;
 
     const segment =
       legKey === "LEG1"
         ? `${trip.from} - ${trip.via}`
         : `${trip.via} - ${trip.to}`;
-
     setSelectedSegment?.(segment);
-    setActiveScreen?.("aiRecommendDetail");
+
+    setSearchParams?.({
+      userId,
+      ticketId: trip.ticketId, // ✅ 항상 동일
+      destName: dest, // ✅ LEG에 따라 달라짐
+      isHopper: true,
+      segment,
+      routeLabel: trip.routeLabel,
+      dateLabel: trip.dateLabel,
+      from: trip.from,
+      to: trip.to,
+      via: trip.via,
+      hasStopover: trip.hasStopover,
+    });
+
+    setActiveScreen?.("preferenceSurvey");
+    setActiveTab?.("travel");
   };
 
   const cardWidth = Math.round(332 * scale);
@@ -240,6 +302,7 @@ const TravelScreen = ({
                 avatarSize={avatarSize}
                 onAiPress={handleAiPress}
               />
+
               <Text
                 style={[
                   styles.selectOtherTrip,
@@ -250,7 +313,7 @@ const TravelScreen = ({
               </Text>
             </View>
 
-            {/* 아래 섹션들은 더미 유지 */}
+            {/* 명소 */}
             <View
               style={[
                 styles.sectionWrap,
@@ -298,6 +361,7 @@ const TravelScreen = ({
               </ScrollView>
             </View>
 
+            {/* 맛집 */}
             <View
               style={[
                 styles.sectionWrap,
@@ -348,6 +412,7 @@ const TravelScreen = ({
         )}
       </ScrollView>
 
+      {/* 경유 구간 선택 모달 */}
       <StopoverSelectModal
         visible={stopoverModalVisible}
         scale={scale}
@@ -361,7 +426,7 @@ const TravelScreen = ({
       <BottomNavigation activeTab="travel" setActiveTab={setActiveTab} />
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   planCardWrapper: {
@@ -400,5 +465,3 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
 });
-
-export default TravelScreen;

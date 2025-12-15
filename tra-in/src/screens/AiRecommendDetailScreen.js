@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useRef } from "react";
+// src/screens/AiRecommendDetailScreen.js
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,176 +8,378 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import { screenStyles } from "../constants/screenStyles";
 import WaypointCard from "../components/WaypointCard";
-import WaypointActionButton from "../components/WaypointActionButton";
 import { Colors } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
-import { IMAGES, AVATAR } from "../constants/images";
+import { AVATAR } from "../constants/images";
+import { API_BASE } from "../config/api";
 import {
   NaverMapView,
   NaverMapMarkerOverlay,
 } from "@mj-studio/react-native-naver-map";
 
 const { width } = Dimensions.get("window");
-
 const imgAvatar = AVATAR.AVATAR;
 
-const waypoints = [
-  {
-    number: 1,
-    color: "#005db3",
-    title: "대전역",
-    desc: "기차역 | 대전 동구 중앙로 215",
-  },
-  {
-    number: 2,
-    color: "#ff81b9",
-    title: "김화칼국수",
-    desc: "맛집/카페 | 대전 동구 중앙로203번길 28",
-  },
-  {
-    number: 3,
-    color: "#ff81b9",
-    title: "꿈틀",
-    desc: "맛집/카페 | 대전 동구 중앙로203번길 5",
-  },
-  {
-    number: 4,
-    color: "#ac8f39",
-    title: "꿈돌이하우스",
-    desc: "관광 | 대전 동구 중앙로203번길 3",
-  },
-  {
-    number: 5,
-    color: "#ac8f39",
-    title: "대전트래블라운지",
-    desc: "관광 | 대전 동구 중앙로 187-1",
-  },
-  {
-    number: 6,
-    color: "#ff81b9",
-    title: "미들커피",
-    desc: "맛집/카페 | 대전 동구 대전로797번길 46",
-  },
-];
+const RECOMMENDER_API_BASE = "http://10.0.2.2:8000";
+const DEFAULT_BASE = { latitude: 36.3258, longitude: 127.4353 };
 
-// 예시: 모달에서 받은 구간 정보 props로 받기
+// ✅ 커스텀 핀 PNG
+const PIN_BLUE = require("../../assets/Icons/blue.png");
+const PIN_GRAY = require("../../assets/Icons/gray.png");
+const PIN_PINK = require("../../assets/Icons/pink.png");
+
+// ✅ 핀 결정 로직: 기차역(blue) / pinned(pink) / unpinned(gray)
+function getMarkerIcon(wp, pinnedIds) {
+  const isStation = wp.type === "기차역" || wp.contentId == null;
+  if (isStation) return PIN_BLUE;
+  if (wp.contentId && pinnedIds.has(wp.contentId)) return PIN_PINK;
+  return PIN_GRAY;
+}
+
 export default function AiRecommendDetailScreen({
   setActiveTab,
   setActiveScreen,
+  searchParams,
   segment = "부산 - 대전",
-  waypoints: propWaypoints,
 }) {
-  // 실제로는 propWaypoints를 받아야 함. 없으면 기존 더미 사용
-  const initialWaypoints = useMemo(() => {
-    return (
-      propWaypoints || [
-        {
-          number: 1,
-          type: "기차역",
-          title: "대전역",
-          desc: "기차역 | 대전 동구 중앙로 215",
-        },
-        {
-          number: 2,
-          type: "맛집/카페",
-          title: "김화칼국수",
-          desc: "맛집/카페 | 대전 동구 중앙로203번길 28",
-        },
-        {
-          number: 3,
-          type: "맛집/카페",
-          title: "꿈틀",
-          desc: "맛집/카페 | 대전 동구 중앙로203번길 5",
-        },
-        {
-          number: 4,
-          type: "관광",
-          title: "꿈돌이하우스",
-          desc: "관광 | 대전 동구 중앙로203번길 3",
-        },
-        {
-          number: 5,
-          type: "관광",
-          title: "대전트래블라운지",
-          desc: "관광 | 대전 동구 중앙로 187-1",
-        },
-        {
-          number: 6,
-          type: "맛집/카페",
-          title: "미들커피",
-          desc: "맛집/카페 | 대전 동구 대전로797번길 46",
-        },
-      ]
-    );
-  }, [propWaypoints]);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [waypointsState, setWaypointsState] = useState(initialWaypoints);
   const scrollRef = useRef(null);
 
-  // ✅ 임시 좌표 (대전역 근처 대략)
-  // 실제 서비스에서는 propWaypoints에 latitude/longitude를 같이 내려주는 걸 추천!
-  const base = { latitude: 36.3258, longitude: 127.4353 }; // 대전역 근처(대략)
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const waypointsWithCoords = useMemo(() => {
-    return waypointsState.map((w, idx) => {
-      // 1) 만약 wp에 실제 좌표가 있으면 그걸 사용
-      if (w.latitude && w.longitude) {
-        return { ...w, latitude: w.latitude, longitude: w.longitude };
-      }
+  const [waypointsState, setWaypointsState] = useState([]);
 
-      // 2) 없으면 임시로 base 주변에 조금씩 흩뿌려서 마커가 보이게
-      const dLat = 0.0012 * idx;
-      const dLng = 0.001 * idx;
-      return {
-        ...w,
-        latitude: base.latitude + dLat,
-        longitude: base.longitude + dLng,
-      };
-    });
-  }, [waypointsState]);
+  // ✅ 하트(고정) / 제외(재추천 금지)
+  const [pinnedIds, setPinnedIds] = useState(() => new Set());
+  const [excludedIds, setExcludedIds] = useState(() => new Set());
+
+  const userId = searchParams?.userId ?? null;
+  const ticketId = searchParams?.ticketId ?? null;
+
+  // ✅ 여기서 “도착지”가 기준. ReservationDetailScreen에서 구간 버튼 누르면 이 destName만 바꿔서 넘김.
+  const destName = searchParams?.destName ?? "";
+  const travelPreferenceKorean = searchParams?.travelPreference ?? "자연";
+
+  // ✅ 상단 라벨: (구간) segment > (전체) routeLabel > props segment
+  const topLabel = useMemo(() => {
+    return searchParams?.segment || searchParams?.routeLabel || segment;
+  }, [searchParams?.segment, searchParams?.routeLabel, segment]);
+
+  const travelPreferenceForApi = useMemo(() => {
+    const map = {
+      힐링: "relaxation",
+      액티비티: "activity",
+      맛집: "food",
+      쇼핑: "shopping",
+      자연: "nature",
+      문화: "culture",
+    };
+
+    const lowered = String(travelPreferenceKorean).toLowerCase();
+    const englishSet = new Set([
+      "relaxation",
+      "activity",
+      "food",
+      "shopping",
+      "nature",
+      "culture",
+    ]);
+    if (englishSet.has(lowered)) return lowered;
+    return map[travelPreferenceKorean] || "nature";
+  }, [travelPreferenceKorean]);
 
   const handleBack = () => {
     if (setActiveTab) setActiveTab("travel");
     if (setActiveScreen) setActiveScreen(null);
   };
 
-  const renumber = (list) => list.map((w, idx) => ({ ...w, number: idx + 1 }));
+  // ✅ 추천 API 요청 바디
+  const buildRecommendBody = (excludeSet) => {
+    const query =
+      travelPreferenceKorean && destName
+        ? `${destName}에서 ${travelPreferenceKorean} 중심으로 갈만한 곳 추천`
+        : "가까운 여행지 추천";
 
-  const handleToggleEdit = () => {
-    setIsEditing((v) => {
-      const next = !v;
-      // if (next) {
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      });
-      // }
+    const excludeIdsArr = Array.from(excludeSet ?? []);
+
+    return {
+      latitude: DEFAULT_BASE.latitude,
+      longitude: DEFAULT_BASE.longitude,
+      query,
+      travel_preference: travelPreferenceForApi,
+      content_types: ["12", "39", "25"],
+      max_distance_km: 10,
+      n_results: 30,
+      distance_weight: 0.4,
+      similarity_weight: 0.4,
+      preference_weight: 0.2,
+      exclude_content_ids: excludeIdsArr,
+    };
+  };
+
+  // ✅ “역 카드”는 항상 맨 위
+  const stationWp = useMemo(() => {
+    return {
+      number: 1,
+      type: "기차역",
+      title: destName ? `${destName}역` : "도착역",
+      desc: destName ? `기차역 | ${destName}` : "기차역",
+      latitude: DEFAULT_BASE.latitude,
+      longitude: DEFAULT_BASE.longitude,
+      contentId: null,
+    };
+  }, [destName]);
+
+  const fetchExcludedFromServer = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/user-picks/excluded?userId=${userId}&userTicketId=${ticketId}`
+      );
+      if (!res.ok) return;
+      const json = await res.json();
+      const ids = json?.excludedContentIds ?? [];
+      setExcludedIds(new Set(ids));
+    } catch {}
+  };
+
+  const fetchRecommendAndRender = async ({ keepPinned = true } = {}) => {
+    const exclude = new Set(excludedIds);
+    if (keepPinned) {
+      for (const id of pinnedIds) exclude.add(id);
+    }
+
+    const body = buildRecommendBody(exclude);
+
+    const recRes = await fetch(
+      `${RECOMMENDER_API_BASE}/api/v1/travel/search/location-hybrid`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!recRes.ok) {
+      const text = await recRes.text().catch(() => "");
+      throw new Error(`추천 API 호출 실패 (${recRes.status}) ${text}`);
+    }
+
+    const recJson = await recRes.json();
+    const results = recJson?.results ?? [];
+
+    const filtered = results.filter((r) => {
+      const id = r?.id;
+      if (!id) return false;
+      if (exclude.has(id)) return false;
+      return true;
+    });
+
+    const mapped = filtered.slice(0, 10).map((r, idx) => ({
+      number: idx + 2,
+      type: r.content_type_name || "추천",
+      title: r.title || "추천 장소",
+      desc: `${r.content_type_name || "추천"} | ${
+        r.address || "주소 정보 없음"
+      }`,
+      contentId: r.id,
+      address: r.address,
+      latitude: r.latitude,
+      longitude: r.longitude,
+      distanceKm: r.distance_km,
+      imageUrl: r.image_url,
+      phone: r.phone,
+      contentTypeName: r.content_type_name,
+    }));
+
+    const pinnedList = keepPinned
+      ? waypointsState.filter((w) => w.contentId && pinnedIds.has(w.contentId))
+      : [];
+
+    const finalListRaw = [stationWp, ...pinnedList, ...mapped].filter(
+      (w) => w.latitude && w.longitude
+    );
+
+    const finalList = finalListRaw.map((w, idx) => ({
+      ...w,
+      number: idx + 1,
+    }));
+
+    setWaypointsState(finalList);
+
+    return { mappedNew: mapped, finalList };
+  };
+
+  useEffect(() => {
+    console.log("[AI DETAIL] searchParams:", searchParams);
+
+    if (!userId || !ticketId) {
+      Alert.alert("오류", "추천에 필요한 userId/ticketId가 없습니다.", [
+        { text: "OK", onPress: handleBack },
+      ]);
+      return;
+    }
+
+    (async () => {
+      try {
+        setLoading(true);
+        setErrorMsg("");
+
+        await fetchExcludedFromServer();
+
+        const { mappedNew } = await fetchRecommendAndRender({
+          keepPinned: true,
+        });
+
+        setSaving(true);
+        const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            userTicketId: ticketId,
+            destStation: destName,
+            picks: mappedNew.map((m) => ({
+              contentId: m.contentId,
+              title: m.title,
+              address: m.address,
+              distanceKm: m.distanceKm,
+              contentTypeName: m.contentTypeName,
+              latitude: m.latitude,
+              longitude: m.longitude,
+              imageUrl: m.imageUrl,
+              phone: m.phone,
+              startTime: null,
+              endTime: null,
+            })),
+          }),
+        });
+
+        if (!saveRes.ok) {
+          const text = await saveRes.text().catch(() => "");
+          console.log("[WARN] user_pick 저장 실패:", saveRes.status, text);
+        }
+      } catch (e) {
+        setErrorMsg(e?.message ?? "추천 결과를 불러오지 못했어요.");
+        setWaypointsState([]);
+      } finally {
+        setSaving(false);
+        setLoading(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, ticketId, destName, travelPreferenceForApi]);
+
+  const togglePin = (contentId) => {
+    if (!contentId) return;
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(contentId)) next.delete(contentId);
+      else next.add(contentId);
       return next;
     });
   };
 
-  const handleRemove = (index) => {
-    setWaypointsState((prev) => renumber(prev.filter((_, i) => i !== index)));
+  const handleRefresh = async () => {
+    if (!userId || !ticketId) return;
+
+    try {
+      setRefreshing(true);
+
+      const removable = waypointsState
+        .filter((w) => w.contentId)
+        .filter((w) => !pinnedIds.has(w.contentId))
+        .map((w) => w.contentId);
+
+      if (removable.length > 0) {
+        const cleanupRes = await fetch(
+          `${API_BASE}/user-picks/refresh-cleanup`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId,
+              userTicketId: ticketId,
+              destStation: destName,
+              removeContentIds: removable,
+              keepContentIds: Array.from(pinnedIds),
+            }),
+          }
+        );
+
+        if (!cleanupRes.ok) {
+          const text = await cleanupRes.text().catch(() => "");
+          console.log("[WARN] refresh-cleanup 실패:", cleanupRes.status, text);
+        }
+      }
+
+      setExcludedIds((prev) => {
+        const next = new Set(prev);
+        for (const id of removable) next.add(id);
+        return next;
+      });
+
+      const { mappedNew } = await fetchRecommendAndRender({ keepPinned: true });
+
+      setSaving(true);
+      const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          userTicketId: ticketId,
+          destStation: destName,
+          picks: mappedNew.map((m) => ({
+            contentId: m.contentId,
+            title: m.title,
+            address: m.address,
+            distanceKm: m.distanceKm,
+            contentTypeName: m.contentTypeName,
+            latitude: m.latitude,
+            longitude: m.longitude,
+            imageUrl: m.imageUrl,
+            phone: m.phone,
+            startTime: null,
+            endTime: null,
+          })),
+        }),
+      });
+
+      if (!saveRes.ok) {
+        const text = await saveRes.text().catch(() => "");
+        console.log("[WARN] user_pick 저장 실패:", saveRes.status, text);
+      }
+
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      });
+    } catch (e) {
+      Alert.alert("오류", e?.message ?? "새로고침 중 문제가 발생했어요.");
+    } finally {
+      setSaving(false);
+      setRefreshing(false);
+    }
   };
 
-  const handleAddAfter = (index) => {
-    const dummy = {
-      number: 0,
-      type: "관광",
-      title: "새 경유지",
-      desc: "관광 | 주소를 입력해주세요",
+  const camera = useMemo(() => {
+    const station = waypointsState?.[0];
+    return {
+      latitude: station?.latitude ?? DEFAULT_BASE.latitude,
+      longitude: station?.longitude ?? DEFAULT_BASE.longitude,
+      zoom: 14,
     };
+  }, [waypointsState]);
 
-    setWaypointsState((prev) => {
-      const next = [...prev];
-      next.splice(index + 1, 0, dummy);
-      return renumber(next);
-    });
-  };
+  const markers = useMemo(() => {
+    return waypointsState.filter((w) => w.latitude && w.longitude);
+  }, [waypointsState]);
 
   return (
     <View style={screenStyles.container}>
@@ -185,68 +388,105 @@ export default function AiRecommendDetailScreen({
         showBackButton={true}
         onBackPress={handleBack}
       />
+
       <View style={styles.container}>
-        {/* 지도 영역: 카카오맵 API로 대체 예정 */}
         <View style={styles.mapWrap}>
           <NaverMapView
             style={styles.mapImg}
-            initialCamera={{
-              latitude: 36.3326,
-              longitude: 127.4349,
-              zoom: 14,
-            }}
-            isShowZoomControls={true} // + / - 버튼 (Android)
+            initialCamera={camera}
+            isShowZoomControls={true}
             isShowCompass={false}
             isShowLocationButton={false}
-          />
+          >
+            {markers.map((w) => (
+              <NaverMapMarkerOverlay
+                key={`${w.number}-${w.title}`}
+                latitude={w.latitude}
+                longitude={w.longitude}
+                image={getMarkerIcon(w, pinnedIds)}
+                width={32}
+                height={42}
+                anchor={{ x: 0.5, y: 1 }}
+              />
+            ))}
+          </NaverMapView>
 
           <View style={styles.routeSummary}>
             <Image source={imgAvatar} style={styles.avatarSmall} />
-            <Text style={styles.routeText}>{segment}</Text>
+            <Text style={styles.routeText}>{topLabel}</Text>
           </View>
         </View>
 
-        {/* 경유지 리스트 헤더 + 편집 아이콘 */}
-        <View style={styles.listHeaderRow}>
-          <View style={{ flex: 1 }} />
-          <TouchableOpacity style={styles.editBtn} onPress={handleToggleEdit}>
-            <MaterialIcons
-              name={isEditing ? "check" : "edit"}
-              size={22}
-              color={isEditing ? "#FF81B9" : Colors.korailGray}
-            />
-          </TouchableOpacity>
-        </View>
-        {/* 경유지 카드 + 길찾기 버튼 */}
-        <ScrollView
-          ref={scrollRef}
-          style={styles.detailSection}
-          contentContainerStyle={{ paddingBottom: 40 }}
-        >
-          {waypointsState.map((wp, idx) => (
-            <View key={`${wp.number}-${idx}`}>
-              <WaypointCard
-                {...wp}
-                showDivider
-                isEditing={isEditing}
-                onRemove={() => handleRemove(idx)}
-                onDirectionsPress={() => {}}
-              />
+        {loading ? (
+          <View style={{ width: 332, alignItems: "center", paddingTop: 16 }}>
+            <ActivityIndicator />
+            <Text style={{ marginTop: 10, color: Colors.korailGray }}>
+              추천 장소 불러오는 중...
+            </Text>
+          </View>
+        ) : errorMsg ? (
+          <View style={{ width: 332, alignItems: "center", paddingTop: 16 }}>
+            <Text style={{ color: "crimson", textAlign: "center" }}>
+              {errorMsg}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.listHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: Colors.korailGray, fontSize: 12 }}>
+                  {refreshing
+                    ? "새 추천 불러오는 중..."
+                    : saving
+                    ? "추천 저장 중..."
+                    : "추천 결과"}
+                </Text>
+              </View>
 
-              {/* 카드 사이 파란 + (편집 모드일 때만) */}
-              {isEditing && (
-                <View style={styles.addRow}>
-                  <TouchableOpacity
-                    onPress={() => handleAddAfter(idx)}
-                    style={styles.addBtn}
-                  >
-                    <MaterialIcons name="add" size={18} color={Colors.white} />
-                  </TouchableOpacity>
-                </View>
-              )}
+              <TouchableOpacity
+                style={styles.refreshBtn}
+                onPress={handleRefresh}
+                disabled={refreshing || saving}
+              >
+                <MaterialIcons
+                  name="refresh"
+                  size={22}
+                  color={
+                    refreshing || saving
+                      ? Colors.korailSilver
+                      : Colors.korailGray
+                  }
+                />
+              </TouchableOpacity>
             </View>
-          ))}
-        </ScrollView>
+
+            <ScrollView
+              ref={scrollRef}
+              style={styles.detailSection}
+              contentContainerStyle={{ paddingBottom: 40 }}
+            >
+              {waypointsState.map((wp, idx) => {
+                const isStation = wp.type === "기차역" || wp.contentId == null;
+                const pinned = wp.contentId
+                  ? pinnedIds.has(wp.contentId)
+                  : false;
+
+                return (
+                  <View key={`${wp.number}-${idx}`}>
+                    <WaypointCard
+                      {...wp}
+                      showDivider
+                      onDirectionsPress={() => {}}
+                      showPin={!isStation}
+                      isPinned={pinned}
+                      onTogglePin={() => togglePin(wp.contentId)}
+                    />
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </>
+        )}
       </View>
     </View>
   );
@@ -295,54 +535,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#000",
   },
-  marker: {
-    position: "absolute",
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  markerText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 12,
-  },
   detailSection: {
     width: 332,
     flex: 1,
-  },
-  waypointCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderColor: "#d9d9d9",
-    borderWidth: 1,
-    borderRadius: 10,
-    height: 55,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 1,
-    position: "relative",
-  },
-  waypointTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#2d2d2d",
-  },
-  waypointDesc: {
-    fontSize: 12,
-    color: "#77777a",
-    fontWeight: "500",
-    marginTop: 2,
   },
   listHeaderRow: {
     flexDirection: "row",
@@ -351,21 +546,7 @@ const styles = StyleSheet.create({
     width: 332,
     marginBottom: 2,
   },
-  editBtn: {
+  refreshBtn: {
     padding: 6,
-  },
-  addRow: {
-    alignItems: "flex-start",
-    paddingLeft: 38, // 빨간 '-' 자리 + 간격 맞추기
-    marginTop: -4,
-    marginBottom: 10,
-  },
-  addBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: "#2F80FF",
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

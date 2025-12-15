@@ -18,30 +18,36 @@ export default function WaypointCard({
   showDivider,
   onDirectionsPress,
 
-  isEditing = false,
-  onRemove,
+  // ✅ 추가
+  isPinned = false,
+  onTogglePin = () => {},
+  showPin = true, // 기차역은 false로 줄 예정
 }) {
+  const markerBg = typeColor[type] || Colors.white;
+
   return (
     <View style={styles.row}>
-      {isEditing && (
+      <View style={styles.card}>
+        {/* ✅ 왼쪽: 하트(고정) */}
         <TouchableOpacity
           activeOpacity={0.85}
-          onPress={onRemove}
-          style={styles.removeBtn}
-        >
-          <MaterialIcons name="remove" size={18} color={Colors.white} />
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.card}>
-        <View
+          onPress={onTogglePin}
+          disabled={!showPin}
           style={[
             styles.marker,
-            { backgroundColor: typeColor[type] || Colors.korailGray },
+            { backgroundColor: markerBg, opacity: showPin ? 1 : 0.9 },
           ]}
         >
-          <Text style={styles.markerText}>{number}</Text>
-        </View>
+          {showPin ? (
+            <MaterialIcons
+              name={isPinned ? "favorite" : "favorite-border"}
+              size={16}
+              color={Colors.korailHotPink}
+            />
+          ) : (
+            <MaterialIcons name="train" size={16} color={Colors.white} />
+          )}
+        </TouchableOpacity>
 
         {showDivider && <View style={styles.divider} />}
 
@@ -55,7 +61,7 @@ export default function WaypointCard({
         </View>
 
         <View style={styles.actionWrap}>
-          {!isEditing && <WaypointActionButton onPress={onDirectionsPress} />}
+          <WaypointActionButton onPress={onDirectionsPress} />
         </View>
       </View>
     </View>
@@ -67,15 +73,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
-  },
-  removeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#FF5A6A",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
   },
   card: {
     flex: 1,
@@ -102,11 +99,6 @@ const styles = StyleSheet.create({
     height: 32,
     backgroundColor: Colors.korailSilver,
     marginRight: 10,
-  },
-  markerText: {
-    color: Colors.white,
-    fontWeight: "bold",
-    fontSize: 12,
   },
   infoWrap: {
     flex: 1,
