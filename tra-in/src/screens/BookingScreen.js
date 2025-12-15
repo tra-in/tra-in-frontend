@@ -1,296 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View,  Text,  StyleSheet,  Pressable,  FlatList,  ScrollView,  ActivityIndicator,  Button,  Alert,} from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Button,
+  Alert,
+} from "react-native";
 import { API_BASE } from "../config/api";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
-
-const DATE_OPTIONS = ["2025-12-16", "2025-12-17", "2025-12-18"];
-
-/** 날짜 문자열(YYYY-MM-DD)을 하루 뒤로 */
-function plusOneDay(dateStr) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
-/** 한 번만 조회 (특정 날짜 + after 옵션) */
-function searchOnce(origin, dest, date, after) {
-  const params = new URLSearchParams({ origin, dest, date });
-  if (after) params.append("after", after);
-  return fetch(`${API_BASE}/trains?${params.toString()}`).then((res) =>
-    res.json()
-  );
-}
-
-/** origin→dest 구간에서 오늘 or 내일 중 하루라도 열차가 있는지 */
-async function hasAnyTrain(origin, dest, baseDate) {
-  // 오늘
-  let data = await searchOnce(origin, dest, baseDate, null);
-  if (Array.isArray(data) && data.length > 0) return true;
-
-  // 내일
-  const nextDate = plusOneDay(baseDate);
-  data = await searchOnce(origin, dest, nextDate, null);
-  return Array.isArray(data) && data.length > 0;
-}
-
-/* ==================== 열차 목록 컴포넌트 ==================== */
-function TrainList({ title, origin, dest, baseDate, after, onSelect }) {
-  const [selectedDate, setSelectedDate] = useState(baseDate); // 사용자가 선택한 날짜
-  const [trains, setTrains] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    async function load() {
-      try {
-        const data = await searchOnce(origin, dest, selectedDate, after);
-        if (!cancelled) {
-          if (Array.isArray(data)) setTrains(data);
-          else setTrains([]);
-          setLoading(false);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          console.error("train list error", e);
-          setTrains([]);
-          setLoading(false);
-        }
-      }
-    }
-
-    if (origin && dest && selectedDate) {
-      load();
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [origin, dest, selectedDate, after]);
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
-
-  const renderItem = ({ item }) => (
-    <Pressable style={styles.trainCard} onPress={() => onSelect(item)}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-        <Text style={styles.trainNo}>
-          {item.trainType} {item.trainNo}
-        </Text>
-        <Text>
-          {item.departureTime.slice(11, 16)} →{" "}
-          {item.arrivalTime.slice(11, 16)}
-        </Text>
-      </View>
-      <Text style={styles.trainRoute}>
-        {item.origin} → {item.dest}
-      </Text>
-    </Pressable>
-  );
-
-  return (
-    <View style={{ flex: 1 }}>
-      {/* 구간 제목 + 기준 날짜 */}
-      <Text style={styles.stepTitle}>
-        {title} ({selectedDate} 기준)
-      </Text>
-
-      {/* 날짜 선택 칩(16/17/18) */}
-      <View style={styles.trainDateRow}>
-        {DATE_OPTIONS.map((d) => {
-          const active = d === selectedDate;
-          return (
-            <Pressable
-              key={d}
-              style={[
-                styles.trainDateChip,
-                active && styles.trainDateChipActive,
-              ]}
-              onPress={() => setSelectedDate(d)}
-            >
-              <Text
-                style={[
-                  styles.trainDateChipText,
-                  active && styles.trainDateChipTextActive,
-                ]}
-              >
-                {d}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* 열차 리스트 */}
-      <FlatList
-        data={trains}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderItem}
-        ListEmptyComponent={<Text>해당 구간의 열차가 없습니다.</Text>}
-      />
-    </View>
-  );
-}
-
-function formatMonthDay(dateTimeStr) {
-  if (!dateTimeStr) return "";
-  const month = dateTimeStr.slice(5, 7); // "12"
-  const day = dateTimeStr.slice(8, 10); // "16"
-  return `${month}/${day}`; // "12/16"
-}
-
-/* ==================== 좌석 선택 컴포넌트 ==================== */
-function SeatSelect({ legTitle, train, date, onConfirm }) {
-  const [cars, setCars] = useState([]);
-  const [selectedCar, setSelectedCar] = useState(null);
-  const [seats, setSeats] = useState([]);
-  const [loadingSeats, setLoadingSeats] = useState(false);
-  const [selectedSeatCode, setSelectedSeatCode] = useState(null);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/trains/${train.id}/cars`)
-      .then((res) => res.json())
-      .then((data) => {
-        setCars(data);
-        if (data.length > 0) {
-          loadSeatsForCar(data[0]);
-        }
-      })
-      .catch((e) => console.error("cars error", e));
-  }, [train.id]);
-
-  const loadSeatsForCar = (car) => {
-    setSelectedCar(car);
-    setSelectedSeatCode(null);
-    setLoadingSeats(true);
-    fetch(`${API_BASE}/cars/${car.id}/seats`)
-      .then((res) => res.json())
-      .then((data) => {
-        setSeats(data);
-        setLoadingSeats(false);
-      })
-      .catch((e) => {
-        console.error("seats error", e);
-        setLoadingSeats(false);
-      });
-  };
-
-  const seatRows = useMemo(() => {
-    const map = {};
-    seats.forEach((s) => {
-      if (!map[s.rowNo]) map[s.rowNo] = [];
-      map[s.rowNo].push(s);
-    });
-    return Object.keys(map)
-      .sort((a, b) => Number(a) - Number(b))
-      .map((rowKey) => ({
-        row: Number(rowKey),
-        seats: map[rowKey].sort((a, b) => a.col.localeCompare(b.col)),
-      }));
-  }, [seats]);
-
-  const handleSeatPress = (seat) => {
-    if (seat.status === "SOLD") return;
-    setSelectedSeatCode(seat.seatCode);
-  };
-
-  const handleConfirm = () => {
-    if (!selectedCar || !selectedSeatCode) return;
-    onConfirm({
-      carId: selectedCar.id,
-      carNo: selectedCar.carNo,
-      seatCode: selectedSeatCode,
-    });
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      <Text style={styles.stepTitle}>{legTitle}</Text>
-      <Text style={styles.trainInfo}>
-        {train.origin} → {train.dest} | {date}
-      </Text>
-      <Text style={styles.trainInfo}>
-        {train.trainType} {train.trainNo} |{" "}
-        {train.departureTime.slice(11, 16)} → {train.arrivalTime.slice(11, 16)}
-      </Text>
-
-      {/* 호차 선택 탭 */}
-      <View style={styles.carTabRow}>
-        {cars.map((car) => {
-          const active = selectedCar && car.id === selectedCar.id;
-          return (
-            <Pressable
-              key={car.id}
-              style={[styles.carTab, active && styles.carTabActive]}
-              onPress={() => loadSeatsForCar(car)}
-            >
-              <Text style={active && { color: "#0A84FF", fontWeight: "bold" }}>
-                {car.carNo}호차
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* 좌석 그리드 */}
-      {loadingSeats ? (
-        <View style={styles.center}>
-          <ActivityIndicator />
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={styles.seatScroll}>
-          {seatRows.map((row) => (
-            <View key={row.row} style={styles.seatRow}>
-              {row.seats.map((seat) => {
-                const isSelected = selectedSeatCode === seat.seatCode;
-                let backgroundColor = "#ffffff";
-                let borderWidth = 0;
-                let borderColor = "transparent";
-
-                if (seat.status === "SOLD") {
-                  backgroundColor = "#dddddd";
-                } else if (isSelected) {
-                  borderWidth = 2;
-                  borderColor = "#0A84FF";
-                }
-
-                return (
-                  <Pressable
-                    key={seat.id}
-                    style={[
-                      styles.seatBox,
-                      { backgroundColor, borderWidth, borderColor },
-                    ]}
-                    onPress={() => handleSeatPress(seat)}
-                  >
-                    <Text>{seat.seatCode}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ))}
-        </ScrollView>
-      )}
-
-      <View style={styles.seatFooter}>
-        <Text>
-          선택한 좌석:{" "}
-          {selectedCar && selectedSeatCode
-            ? `${selectedCar.carNo}호차 ${selectedSeatCode}`
-            : "-"}
-        </Text>
-        <Button title="확인" onPress={handleConfirm} />
-      </View>
-    </View>
-  );
-}
+import TrainList from "../components/TrainList";
+import SeatSelect from "../components/SeatSelect";
+import WaypointSelector from "../components/WaypointSelector";
+import BookingSummary from "../components/BookingSummary";
+import { hasAnyTrain } from "../utils/booking";
+import {
+  selectFirstWaypoint,
+  selectSecondWaypoint,
+} from "../utils/waypointHandlers";
 
 /* ==================== 메인 화면 ==================== */
 export default function BookingScreen({ setActiveTab, searchParams, user }) {
@@ -304,10 +32,12 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
   const [selectedSeats, setSelectedSeats] = useState([]); // 각 구간 좌석
 
   // 경유지 단계
-  const [waypointPhase, setWaypointPhase] = useState("first"); // 'first' | 'second'
+  const [waypointPhase, setWaypointPhase] = useState("first"); // 'first' | 'second' | 'third'
   const [wp1, setWp1] = useState(null);
   const [wp2, setWp2] = useState(null);
+  const [wp3, setWp3] = useState(null);
   const [wp2Candidates, setWp2Candidates] = useState([]);
+  const [wp3Candidates, setWp3Candidates] = useState([]);
 
   // 로딩/에러
   const [validatingWaypoints, setValidatingWaypoints] = useState(false);
@@ -336,7 +66,9 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
           setWaypointPhase("first");
           setWp1(null);
           setWp2(null);
+          setWp3(null);
           setWp2Candidates([]);
+          setWp3Candidates([]);
 
           const res = await fetch(`${API_BASE}/stations`);
           const data = await res.json();
@@ -404,61 +136,39 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
   /* ====== 경유지 선택 로직 ====== */
 
   // 1번째 경유지 선택
-  const handleSelectFirstWaypoint = async (name) => {
-    setWaypointError("");
-    setValidatingWaypoints(true);
-    setWp1(name);
+  const handleSelectFirstWaypoint = (name) => {
+    selectFirstWaypoint(name, stations, searchParams, {
+      setWaypointError,
+      setValidatingWaypoints,
+      setWp1,
+      setWp2Candidates,
+      setWaypointPhase,
+    });
+  };
 
-    try {
-      const baseDate = searchParams.date;
-      const candidates = [];
-
-      for (const s of stations) {
-        if (
-          s.name === searchParams.originName ||
-          s.name === searchParams.destName ||
-          s.name === name
-        ) {
-          continue;
-        }
-
-        const okFromWp1 = await hasAnyTrain(name, s.name, baseDate);
-        if (!okFromWp1) continue;
-
-        const okToDest = await hasAnyTrain(
-          s.name,
-          searchParams.destName,
-          baseDate
-        );
-        if (!okToDest) continue;
-
-        candidates.push(s.name);
-      }
-
-      setWp2Candidates(candidates);
-
-      if (candidates.length === 0) {
-        setWaypointError(
-          `선택한 경유지(${name})에서 갈 수 있고 도착지까지 이어지는 역이 없습니다. 다른 경유지를 선택해 주세요.`
-        );
-        setWaypointPhase("first");
-      } else {
-        setWaypointPhase("second");
-      }
-    } catch (e) {
-      console.error("WP1 선택 처리 오류", e);
-      setWaypointError("경유지 후보를 계산하는 중 오류가 발생했습니다.");
-      setWaypointPhase("first");
-    } finally {
-      setValidatingWaypoints(false);
-    }
+  // 2번째 경유지 선택
+  const handleSelectSecondWaypoint = (name) => {
+    selectSecondWaypoint(name, stations, searchParams, wp1, {
+      setWp2,
+      setWaypointError,
+      setValidatingWaypoints,
+      setWp3Candidates,
+      setWaypointPhase,
+    });
   };
 
   // 최종 경유 조합 확정
-  const confirmWaypoints = (useSecond) => {
-    const stops = useSecond
-      ? [searchParams.originName, wp1, wp2, searchParams.destName]
-      : [searchParams.originName, wp1, searchParams.destName];
+  const confirmWaypoints = (waypointCount) => {
+    let stops;
+    if (waypointCount === 1) {
+      stops = [searchParams.originName, wp1, searchParams.destName];
+    } else if (waypointCount === 2) {
+      stops = [searchParams.originName, wp1, wp2, searchParams.destName];
+    } else if (waypointCount === 3) {
+      stops = [searchParams.originName, wp1, wp2, wp3, searchParams.destName];
+    } else {
+      stops = [searchParams.originName, searchParams.destName];
+    }
 
     setRouteStops(stops);
     setCurrentLegIndex(0);
@@ -485,7 +195,7 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
           destStation: leg.to,
           departureTime: train.departureTime, // "2025-12-16T06:30:00"
           arrivalTime: train.arrivalTime,
-          trainNo: train.trainNo,             // 🔁 trainName 대신 trainNo 하나만 전송
+          trainNo: train.trainNo, // 🔁 trainName 대신 trainNo 하나만 전송
           carNo: seat.carNo,
           seatCode: seat.seatCode,
         };
@@ -535,90 +245,27 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
         <Button title="홈으로" onPress={() => setActiveTab("home")} />
       </View>
     );
-  } else if (
-    mode === "hopper" &&
-    step === "waypoints" &&
-    waypointPhase === "first"
-  ) {
-    // 메뚜기: 1번째 경유지 선택
+  } else if (mode === "hopper" && step === "waypoints") {
+    // 메뚜기: 경유지 선택 (1번째 또는 2번째)
     body = (
-      <View style={styles.container}>
-        <Text style={styles.title}>1번째 경유지 선택</Text>
-        <Text style={styles.subtitle}>
-          {searchParams.originName} → (경유1) → {searchParams.destName}
-        </Text>
-
-        <ScrollView>
-          {stations.map((s) => (
-            <Pressable
-              key={s.id}
-              style={styles.waypointItem}
-              onPress={() => handleSelectFirstWaypoint(s.name)}
-            >
-              <Text>{s.name}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {validatingWaypoints && (
-          <Text style={{ marginTop: 8 }}>가능한 경유 조합을 확인 중...</Text>
-        )}
-        {waypointError ? (
-          <Text style={{ color: "red", marginTop: 8 }}>{waypointError}</Text>
-        ) : null}
-      </View>
-    );
-  } else if (
-    mode === "hopper" &&
-    step === "waypoints" &&
-    waypointPhase === "second"
-  ) {
-    // 메뚜기: 2번째 경유지 선택 (선택 안 해도 됨)
-    body = (
-      <View style={styles.container}>
-        <Text style={styles.title}>2번째 경유지 선택 (선택 안 해도 됨)</Text>
-        <Text style={styles.subtitle}>
-          {searchParams.originName} → {wp1} → (경유2) → {searchParams.destName}
-        </Text>
-
-        <ScrollView>
-          {wp2Candidates.map((name) => (
-            <Pressable
-              key={name}
-              style={[
-                styles.waypointItem,
-                wp2 === name && styles.waypointItemActive,
-              ]}
-              onPress={() => setWp2(name)}
-            >
-              <Text
-                style={
-                  wp2 === name && { color: "#0A84FF", fontWeight: "bold" }
-                }
-              >
-                {name}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {waypointError ? (
-          <Text style={{ color: "red", marginTop: 8 }}>{waypointError}</Text>
-        ) : null}
-
-        <View style={{ marginTop: 16 }}>
-          <Button
-            title="2번째 경유지 없이 진행"
-            onPress={() => confirmWaypoints(false)}
-          />
-          <View style={{ height: 8 }} />
-          <Button
-            title="선택한 경유지로 진행"
-            onPress={() => confirmWaypoints(true)}
-            disabled={!wp2}
-          />
-        </View>
-      </View>
+      <WaypointSelector
+        phase={waypointPhase}
+        searchParams={searchParams}
+        wp1={wp1}
+        wp2={wp2}
+        wp3={wp3}
+        stations={stations}
+        wp2Candidates={wp2Candidates}
+        wp3Candidates={wp3Candidates}
+        validatingWaypoints={validatingWaypoints}
+        waypointError={waypointError}
+        onSelectFirstWaypoint={handleSelectFirstWaypoint}
+        onSelectSecondWaypoint={handleSelectSecondWaypoint}
+        onSelectThirdWaypoint={setWp3}
+        onConfirmWithOne={() => confirmWaypoints(1)}
+        onConfirmWithTwo={() => confirmWaypoints(2)}
+        onConfirmWithThree={() => confirmWaypoints(3)}
+      />
     );
   } else if (step === "train" && currentLeg) {
     // 열차 선택
@@ -670,66 +317,34 @@ export default function BookingScreen({ setActiveTab, searchParams, user }) {
   } else if (step === "summary") {
     // 요약
     body = (
-      <View style={styles.container}>
-        <Text style={styles.title}>
-          {mode === "direct" ? "여행 요약 (직행)" : "여행 요약 (메뚜기)"}
-        </Text>
-        <Text>날짜: {date}</Text>
-        <Text>인원: 어른 {passengers}명</Text>
-
-        {legs.map((leg, idx) => {
-          const train = selectedTrains[idx];
-          const seat = selectedSeats[idx];
-          if (!train || !seat) return null;
-          return (
-            <View key={idx} style={{ marginTop: 16 }}>
-              <Text style={styles.sectionTitle}>
-                구간 {idx + 1}: {leg.from} → {leg.to}
-              </Text>
-              <Text>
-                {train.trainType} {train.trainNo}
-              </Text>
-              <Text>
-                시간: {train.departureTime.slice(11, 16)} →{" "}
-                {train.arrivalTime.slice(11, 16)} (
-                {formatMonthDay(train.departureTime)})
-              </Text>
-              <Text>
-                좌석: {seat.carNo}호차 {seat.seatCode}
-              </Text>
-            </View>
-          );
-        })}
-
-        <View style={{ marginTop: 32 }}>
-          <Button
-            title="다시 예매하기"
-            onPress={() => {
-              setSelectedSeats([]);
-              setSelectedTrains([]);
-              if (mode === "direct") {
-                setRouteStops([
-                  searchParams.originName,
-                  searchParams.destName,
-                ]);
-                setCurrentLegIndex(0);
-                setStep("train");
-              } else {
-                setWaypointPhase("first");
-                setWp1(null);
-                setWp2(null);
-                setWp2Candidates([]);
-                setWaypointError("");
-                setStep("waypoints");
-              }
-            }}
-          />
-          <View style={{ height: 8 }} />
-          <Button title="예매하기" onPress={handleReserve} />
-          <View style={{ height: 8 }} />
-          <Button title="홈으로" onPress={() => setActiveTab("home")} />
-        </View>
-      </View>
+      <BookingSummary
+        mode={mode}
+        date={date}
+        passengers={passengers}
+        legs={legs}
+        selectedTrains={selectedTrains}
+        selectedSeats={selectedSeats}
+        onRetry={() => {
+          setSelectedSeats([]);
+          setSelectedTrains([]);
+          if (mode === "direct") {
+            setRouteStops([searchParams.originName, searchParams.destName]);
+            setCurrentLegIndex(0);
+            setStep("train");
+          } else {
+            setWaypointPhase("first");
+            setWp1(null);
+            setWp2(null);
+            setWp3(null);
+            setWp2Candidates([]);
+            setWp3Candidates([]);
+            setWaypointError("");
+            setStep("waypoints");
+          }
+        }}
+        onReserve={handleReserve}
+        onGoHome={() => setActiveTab("home")}
+      />
     );
   } else {
     // 안전용
@@ -770,98 +385,5 @@ const styles = StyleSheet.create({
 
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 16, color: "#666" },
-
-  stepTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
-
-  trainCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginBottom: 8,
-  },
-  trainNo: { fontSize: 16, fontWeight: "600" },
-  trainRoute: { marginTop: 4, color: "#666" },
-  trainInfo: { textAlign: "center", marginBottom: 4, color: "#555" },
-
-  carTabRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  carTab: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  carTabActive: {
-    borderColor: "#0A84FF",
-    backgroundColor: "#0A84FF11",
-  },
-
-  seatScroll: { paddingHorizontal: 24, paddingBottom: 24, marginTop: 8 },
-  seatRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  seatBox: {
-    width: 50,
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  seatFooter: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
-  waypointItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginBottom: 8,
-  },
-  waypointItemActive: {
-    borderColor: "#0A84FF",
-    backgroundColor: "#0A84FF11",
-  },
   sectionTitle: { fontSize: 16, fontWeight: "600" },
-
-  trainDateRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
-  },
-  trainDateChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  trainDateChipActive: {
-    borderColor: "#0A84FF",
-    backgroundColor: "#0A84FF11",
-  },
-  trainDateChipText: {
-    fontSize: 12,
-    color: "#555",
-  },
-  trainDateChipTextActive: {
-    color: "#0A84FF",
-    fontWeight: "bold",
-  },
 });
