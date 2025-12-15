@@ -92,7 +92,14 @@ export default function TravelRecommendListScreen({
         if (cancelled) return;
 
         const list = Array.isArray(data?.results) ? data.results : [];
-        setItems(list);
+        const sorted = list.slice().sort((a, b) => {
+          const da =
+            typeof a?.distance_km === "number" ? a.distance_km : Infinity;
+          const db =
+            typeof b?.distance_km === "number" ? b.distance_km : Infinity;
+          return da - db;
+        });
+        setItems(sorted);
       } catch (e) {
         if (!cancelled) {
           setErrorText("추천을 불러오지 못했습니다. (서버/네트워크 확인)");
