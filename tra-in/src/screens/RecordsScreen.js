@@ -9,6 +9,7 @@ import * as Location from 'expo-location';
 const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
   const [address, setAddress] = useState('위치를 가져오는 중...');
   const [loading, setLoading] = useState(true);
+  const [rawAddressResponse, setRawAddressResponse] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -23,14 +24,6 @@ const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
         }
 
         let location = null;
-
-        // 방법 1: 마지막으로 알려진 위치 먼저 시도
-        try {
-          location = await Location.getLastKnownPositionAsync({});
-          console.log('마지막 위치:', location);
-        } catch (e) {
-          console.log('마지막 위치 없음');
-        }
 
         // 방법 2: 현재 위치 가져오기 (더 긴 타임아웃)
         if (!location) {
@@ -56,23 +49,47 @@ const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
 
         console.log('주소 응답:', addressResponse);
 
+        // 저장해두면 디버깅에 도움됨
+        setRawAddressResponse(addressResponse);
+
         if (addressResponse && addressResponse[0]) {
           const addr = addressResponse[0];
-          
-          // 주소 구성
-          let parts = [];
-          if (addr.city) parts.push(addr.city);
-          if (addr.district) parts.push(addr.district);
-          if (addr.street) parts.push(addr.street);
-          if (addr.name) parts.push(addr.name);
-          
-          const formattedAddress = parts.join(' ').trim();
-          
-          if (formattedAddress) {
+
+          // 우선 제공되는 formattedAddress를 사용
+          let formattedAddress = addr.formattedAddress || '';
+
+          // 간혹 에뮬레이터/기기에서 Google 샘플 위치(예: Mountain View / Googleplex)를 반환하므로
+          // 그런 경우에는 좌표로 대체
+          const placeholderPatterns = [/Mountain View/i, /Amphitheatre/i, /Googleplex/i, /1600 Amphitheatre/i];
+          const looksLikePlaceholder = placeholderPatterns.some((re) => {
+            return (formattedAddress && re.test(formattedAddress)) || (addr.name && re.test(addr.name)) || (addr.city && re.test(addr.city));
+          });
+
+          if (looksLikePlaceholder) {
+            setAddress(`${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`);
+          } else if (formattedAddress) {
+            // 한국 주소의 경우 'South Korea, ' 같은 접두어가 들어오는 경우 제거
+            if (formattedAddress.startsWith('South Korea, ')) {
+              formattedAddress = formattedAddress.replace('South Korea, ', '');
+            }
             setAddress(formattedAddress);
           } else {
-            // 주소가 없으면 좌표 표시
-            setAddress(`${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`);
+            // formattedAddress가 없으면 필드들을 조합
+            let parts = [];
+            if (addr.name) parts.push(addr.name);
+            if (addr.streetNumber && addr.street) parts.push(`${addr.streetNumber} ${addr.street}`);
+            else if (addr.street) parts.push(addr.street);
+            if (addr.subregion) parts.push(addr.subregion);
+            if (addr.city) parts.push(addr.city);
+            if (addr.district) parts.push(addr.district);
+            if (addr.region && !parts.includes(addr.region)) parts.push(addr.region);
+
+            const composed = parts.join(' ').trim();
+            if (composed) {
+              setAddress(composed);
+            } else {
+              setAddress(`${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`);
+            }
           }
         } else {
           // 역지오코딩 실패하면 좌표 표시
@@ -126,7 +143,6 @@ const RecordsScreen = ({ setActiveTab, setActiveScreen }) => {
               <Text style={styles.locationText}>{address}</Text>
             )}
           </View>
-
           {/* 카메라 섹션 */}
           <View style={styles.cameraSection}>
             <TouchableOpacity onPress={handleCameraPress} activeOpacity={0.7}>
@@ -274,14 +290,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
   cameraLensInner: {
     width: 16,
     height: 16,
     borderRadius: 8,
     backgroundColor: '#000',
   },
-  
   cameraGuide: {
     fontSize: 15,
     color: '#000',
