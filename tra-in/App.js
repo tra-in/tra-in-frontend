@@ -177,9 +177,7 @@ export default function App() {
       case "home":
         return (
           <HomeScreen
-//            setActiveTab={setActiveTab}
             setActiveScreen={setActiveScreen}
-
             setActiveTab={handleSetActiveTab}
             searchParams={searchParams}
             setSearchParams={setSearchParams}
@@ -190,7 +188,6 @@ export default function App() {
       case "booking":
         return (
           <BookingScreen
-//            setActiveTab={setActiveTab}
             setActiveTab={handleSetActiveTab}
             searchParams={searchParams}
             user={user}
@@ -202,15 +199,6 @@ export default function App() {
             setBookingDraft={setBookingDraft}
           />
         );
-
-//      case "booking":
-//        return (
-//          <BookingScreen
-//            setActiveTab={handleSetActiveTab}
-//            searchParams={searchParams}
-//            user={user}
-//          />
-//        );
 
       case "travel":
         return (
@@ -262,7 +250,6 @@ export default function App() {
       default:
         return (
           <HomeScreen
-//            setActiveTab={setActiveTab}
             setActiveTab={handleSetActiveTab}
             searchParams={searchParams}
             setSearchParams={setSearchParams}
