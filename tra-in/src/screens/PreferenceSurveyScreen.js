@@ -87,7 +87,6 @@ export default function PreferenceSurveyScreen({
 
       <View style={styles.body}>
         <Text style={styles.title}>어떤 여행을 원하시나요?</Text>
-        <Text style={styles.subtitle}>임시 선택: 힐링 / 액티비티 / 맛집</Text>
 
         <View style={styles.optionBox}>
           {options.map((opt) => {

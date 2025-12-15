@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
+import LoadingScreen from "./LoadingScreen";
 import { TRAVEL_API_BASE } from "../config/api";
 import { mapPreference, buildQuery } from "../utils/preference";
 import { CITY_CENTER, getCityCenter } from "../utils/geo";
@@ -132,10 +133,7 @@ export default function TravelRecommendListScreen({
         )}
 
         {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator />
-            <Text style={{ marginTop: 8 }}>추천 불러오는 중...</Text>
-          </View>
+          <LoadingScreen />
         ) : (
           <>
             {errorText ? (
@@ -191,26 +189,28 @@ export default function TravelRecommendListScreen({
           </>
         )}
 
-        <View style={{ marginTop: 12 }}>
-          <Button title="경유지 다시 고르기" onPress={() => onFlowBack?.()} />
-          <View style={{ height: 8 }} />
-          <Button
-            title="담기"
-            onPress={() => {
-              // 선택된 항목들 필터링
-              const selectedList = items.filter(
-                (item) => selectedItems[item?.id]
-              );
-              onFlowConfirm?.({
-                mode: flowModeType,
-                context,
-                region,
-                snapshot,
-                selectedItems: selectedList,
-              });
-            }}
-          />
-        </View>
+        {!loading && (
+          <View style={{ marginTop: 12 }}>
+            <Button title="경유지 다시 고르기" onPress={() => onFlowBack?.()} />
+            <View style={{ height: 8 }} />
+            <Button
+              title="담기"
+              onPress={() => {
+                // 선택된 항목들 필터링
+                const selectedList = items.filter(
+                  (item) => selectedItems[item?.id]
+                );
+                onFlowConfirm?.({
+                  mode: flowModeType,
+                  context,
+                  region,
+                  snapshot,
+                  selectedItems: selectedList,
+                });
+              }}
+            />
+          </View>
+        )}
       </View>
     </View>
   );
