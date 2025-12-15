@@ -1,6 +1,5 @@
-
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { Colors, Spacing, BorderRadius } from "../constants/theme";
 import { REGION_INFO } from "../constants/badgeConstants";
 
@@ -28,41 +27,47 @@ const CongratulationModal = ({ region, onClose }) => {
   const info = CONGRATS_DATA[region] || {};
   const regionInfo = REGION_INFO[region];
   return (
-    <Modal
-      transparent={true}
-      visible={true}
-      animationType="fade"
-      onRequestClose={onClose}
+    <TouchableOpacity
+      style={styles.overlay}
+      activeOpacity={1}
+      onPress={onClose}
     >
-      <TouchableOpacity 
-        style={styles.overlay} 
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        <View style={styles.modalContainer}>
-          <Text style={styles.region}>{region}</Text>
-          {/* 지역별 이미지 */}
-          {info.image ? (
-            <Image source={info.image} style={styles.imagePlaceholder} resizeMode="contain" />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <Text style={styles.imageText}>🎉</Text>
-            </View>
-          )}
-          <Text style={styles.congratsText}>{info.message || "축하드립니다!"}</Text>
-          <Text style={styles.subText}>{info.sub || "여행을 모두 완료했어요!"}</Text>
-        </View>
-      </TouchableOpacity>
-    </Modal>
+      <View style={styles.modalContainer}>
+        <Text style={styles.region}>{region}</Text>
+        {/* 지역별 이미지 */}
+        {info.image ? (
+          <Image
+            source={info.image}
+            style={styles.imagePlaceholder}
+            resizeMode="contain"
+          />
+        ) : (
+          <View style={styles.imagePlaceholder}>
+            <Text style={styles.imageText}>🎉</Text>
+          </View>
+        )}
+        <Text style={styles.congratsText}>
+          {info.message || "축하드립니다!"}
+        </Text>
+        <Text style={styles.subText}>
+          {info.sub || "여행을 모두 완료했어요!"}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10000,
   },
   modalContainer: {
     width: 333,
