@@ -29,7 +29,6 @@ export default function App() {
   const [previousScreen, setPreviousScreen] = useState(null);
   const [badgeFilter, setBadgeFilter] = useState(null); // "incomplete" | null
 
-  // setActiveTab 함수를 래핑하여 필터 파라미터 처리
   const handleSetActiveTab = (tab, options) => {
     if (tab === "badgeList" && options?.filter) {
       setBadgeFilter(options.filter);
@@ -47,9 +46,11 @@ export default function App() {
           setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
           reservation={selectedReservation}
+          setSearchParams={setSearchParams} // ✅ 추가: 구간 버튼에서 AiRecommend로 넘길 params 세팅용
         />
       );
     }
+
     // 장소 상세 화면
     if (activeScreen === "placeDetail" && selectedPlace) {
       return (
@@ -62,6 +63,7 @@ export default function App() {
         />
       );
     }
+
     // 카메라 채팅 화면
     if (activeScreen === "cameraChat") {
       return (
@@ -72,7 +74,8 @@ export default function App() {
         />
       );
     }
-    // 뱃지 상세 화면 우선 처리
+
+    // 뱃지 상세 화면
     if (activeScreen === "badgeDetail" && selectedBadge) {
       return (
         <BadgeDetailScreen
@@ -85,6 +88,7 @@ export default function App() {
         />
       );
     }
+
     if (activeScreen === "badgeCompleted" && selectedBadge) {
       return (
         <BadgeCompletedScreen
@@ -98,7 +102,7 @@ export default function App() {
       );
     }
 
-    // ⭐ 선호도 조사 화면 (AI 추천 진입 전)
+    // 선호도 조사 화면
     if (activeScreen === "preferenceSurvey") {
       return (
         <PreferenceSurveyScreen
@@ -106,27 +110,34 @@ export default function App() {
           setActiveScreen={setActiveScreen}
           searchParams={searchParams}
           setSearchParams={setSearchParams}
-          setUserPreference={() => {}} // 지금은 비워둬도 OK
+          setUserPreference={() => {}}
           openTravelFlow={({ region }) => {
-            // 선호도 조사 완료 → AI 추천 상세 화면으로 이동
-            setSelectedSegment(region); // 추천 기준 지역
+            setSelectedSegment(region);
             setActiveScreen("aiRecommendDetail");
           }}
         />
       );
     }
 
+    // ✅ AI 추천 상세 화면
     if (activeScreen === "aiRecommendDetail") {
       const AiRecommendDetailScreen =
         require("./src/screens/AiRecommendDetailScreen").default;
+
+      // ✅ fallback segment: searchParams가 있으면 그걸 우선 쓰는 게 안전
+      const fallbackSegment =
+        searchParams?.segment ||
+        searchParams?.routeLabel ||
+        selectedSegment ||
+        "부산 - 대전";
 
       return (
         <AiRecommendDetailScreen
           setActiveTab={handleSetActiveTab}
           setActiveScreen={setActiveScreen}
-          segment={selectedSegment ?? "부산 - 대전"}
-          searchParams={searchParams} // ✅ 추가
-          setSearchParams={setSearchParams} // ✅ (선택) 디테일에서 갱신/저장 필요하면
+          segment={fallbackSegment}
+          searchParams={searchParams}
+          setSearchParams={setSearchParams}
         />
       );
     }
@@ -142,6 +153,7 @@ export default function App() {
             user={user}
           />
         );
+
       case "booking":
         return (
           <BookingScreen
@@ -150,14 +162,15 @@ export default function App() {
             user={user}
           />
         );
+
       case "travel":
         return (
           <TravelScreen
             setActiveTab={handleSetActiveTab}
             setActiveScreen={setActiveScreen}
             setSelectedSegment={setSelectedSegment}
-            setSearchParams={setSearchParams} // ✅ 추가
-            userId={user?.id ?? 1} // ✅ 임시로 1 사용
+            setSearchParams={setSearchParams}
+            userId={user?.id ?? 1}
           />
         );
 
@@ -169,6 +182,7 @@ export default function App() {
             setSelectedReservation={setSelectedReservation}
           />
         );
+
       case "badgeList":
         return (
           <BadgeListScreen
@@ -179,6 +193,7 @@ export default function App() {
             initialFilter={badgeFilter}
           />
         );
+
       case "records":
         return (
           <RecordsScreen
@@ -186,6 +201,7 @@ export default function App() {
             setActiveScreen={setActiveScreen}
           />
         );
+
       case "profile":
         return (
           <MyTicketsScreen
@@ -195,6 +211,7 @@ export default function App() {
             setSelectedBadge={setSelectedBadge}
           />
         );
+
       default:
         return (
           <HomeScreen

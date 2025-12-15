@@ -1,3 +1,4 @@
+// src/screens/ReservationListScreen.js
 import React, { useEffect, useState } from "react";
 import {
   Text,
@@ -7,14 +8,12 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-// import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Spacing } from "../constants/theme";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
 import ReservationCard from "../components/ReservationCard";
 import { API_BASE } from "../config/api";
-// import { dummyReservations } from "../data/dummyReservations";
 
 const ReservationListScreen = ({
   setActiveTab,
@@ -25,19 +24,22 @@ const ReservationListScreen = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // ✅ TODO: 실제 로그인 userId로 교체
+  const USER_ID = 1;
+
   useEffect(() => {
     const fetchReservations = async () => {
       try {
         setLoading(true);
         setError(null);
-        // userId는 실제 로그인 정보에서 받아와야 함. 임시로 1로 고정
-        const response = await fetch(`${API_BASE}/user-tickets?userId=1`);
+
+        const response = await fetch(
+          `${API_BASE}/user-tickets?userId=${USER_ID}`
+        );
         if (!response.ok) throw new Error("서버 응답 오류");
         const data = await response.json();
+
         console.log("API 응답:", data);
-        if (!Array.isArray(data)) {
-          console.error("API 응답이 배열이 아님:", data);
-        }
         setReservations(Array.isArray(data) ? data : []);
       } catch (err) {
         setError(err.message);
@@ -54,7 +56,6 @@ const ReservationListScreen = ({
     setActiveScreen("reservationDetail");
   };
 
-  console.log("reservations state:", reservations);
   return (
     <View style={screenStyles.container}>
       <ScreenHeader
@@ -87,13 +88,11 @@ const ReservationListScreen = ({
                 예약 내역이 없습니다.
               </Text>
             ) : (
-              // ticketId(혹은 ticket_id)가 같은 예약을 하나의 카드로 묶어서, legs 전체를 transfers로 넘김
               Object.values(
                 reservations.reduce((acc, reservation, idx) => {
-                  // ticketId 또는 ticket_id로 그룹화
                   const ticketId =
                     reservation.ticketId || reservation.ticket_id || idx;
-                  if (!acc[ticketId]) acc[ticketId] = { legs: [] };
+                  if (!acc[ticketId]) acc[ticketId] = { legs: [], ticketId };
                   acc[ticketId].legs = (acc[ticketId].legs || []).concat(
                     reservation.legs || []
                   );
@@ -102,20 +101,21 @@ const ReservationListScreen = ({
               ).map((group, groupIdx) => {
                 let legs = group.legs || [];
                 if (legs.length === 0) return null;
-                // legs를 출발시간 기준으로 정렬 (출발→도착 순서 보장)
+
                 legs = [...legs].sort((a, b) =>
                   (a.departureTime || "").localeCompare(b.departureTime || "")
                 );
-                // 출발역: legs[0].originStation, 도착역: legs[n-1].destStation, 경유지: legs[0~n-2].destStation(중복 없이, 순서대로)
+
                 const departure = legs[0].originStation;
                 const arrival = legs[legs.length - 1].destStation;
+
                 const departureTime = legs[0].departureTime
                   ? legs[0].departureTime.slice(11, 16)
                   : "";
                 const arrivalTime = legs[legs.length - 1].arrivalTime
                   ? legs[legs.length - 1].arrivalTime.slice(11, 16)
                   : "";
-                // 경유지: legs[0~n-2].destStation, 중복 없이, 순서대로
+
                 const transfers = [];
                 const formatTime = (dt) => (dt ? dt.slice(11, 16) : "");
                 const formatDate = (dt) => {
@@ -126,6 +126,7 @@ const ReservationListScreen = ({
                   ];
                   return `${d}${dayKor ? ` (${dayKor})` : ""}`;
                 };
+
                 for (let i = 0; i < legs.length - 1; i++) {
                   const arrivalLeg = legs[i];
                   const station = arrivalLeg.destStation;
@@ -150,14 +151,20 @@ const ReservationListScreen = ({
                     carNo: arrivalLeg.carNo,
                   });
                 }
+
                 const depDate = legs[0].departureTime
                   ? formatDate(legs[0].departureTime)
                   : "";
                 const arrDate = legs[legs.length - 1].arrivalTime
                   ? formatDate(legs[legs.length - 1].arrivalTime)
                   : "";
+
                 const formatted = {
                   id: group.ticketId || group.ticket_id || groupIdx,
+                  ticketId:
+                    group.ticketId || group.ticket_id || group.id || groupIdx, // ✅ 추가
+                  userId: USER_ID, // ✅ 추가
+
                   date: depDate,
                   departure,
                   arrival,
@@ -171,6 +178,7 @@ const ReservationListScreen = ({
                   transfers,
                   legs,
                 };
+
                 return (
                   <ReservationCard
                     key={formatted.id}

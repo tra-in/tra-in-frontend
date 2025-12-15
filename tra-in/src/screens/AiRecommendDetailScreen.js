@@ -29,10 +29,7 @@ const imgAvatar = AVATAR.AVATAR;
 const RECOMMENDER_API_BASE = "http://10.0.2.2:8000";
 const DEFAULT_BASE = { latitude: 36.3258, longitude: 127.4353 };
 
-const fromName = searchParams?.from ?? "";
-const toName = searchParams?.to ?? "";
-
-// ✅ 커스텀 핀 PNG (경로는 AiRecommendDetailScreen.js 기준으로 조정 필요할 수 있음)
+// ✅ 커스텀 핀 PNG
 const PIN_BLUE = require("../../assets/Icons/blue.png");
 const PIN_GRAY = require("../../assets/Icons/gray.png");
 const PIN_PINK = require("../../assets/Icons/pink.png");
@@ -66,8 +63,15 @@ export default function AiRecommendDetailScreen({
 
   const userId = searchParams?.userId ?? null;
   const ticketId = searchParams?.ticketId ?? null;
+
+  // ✅ 여기서 “도착지”가 기준. ReservationDetailScreen에서 구간 버튼 누르면 이 destName만 바꿔서 넘김.
   const destName = searchParams?.destName ?? "";
-  const travelPreferenceKorean = searchParams?.travelPreference ?? "";
+  const travelPreferenceKorean = searchParams?.travelPreference ?? "자연";
+
+  // ✅ 상단 라벨: (구간) segment > (전체) routeLabel > props segment
+  const topLabel = useMemo(() => {
+    return searchParams?.segment || searchParams?.routeLabel || segment;
+  }, [searchParams?.segment, searchParams?.routeLabel, segment]);
 
   const travelPreferenceForApi = useMemo(() => {
     const map = {
@@ -117,7 +121,7 @@ export default function AiRecommendDetailScreen({
       distance_weight: 0.4,
       similarity_weight: 0.4,
       preference_weight: 0.2,
-      exclude_content_ids: excludeIdsArr, // 추천서버가 지원하면 사용
+      exclude_content_ids: excludeIdsArr,
     };
   };
 
@@ -134,7 +138,6 @@ export default function AiRecommendDetailScreen({
     };
   }, [destName]);
 
-  // ✅ (선택) 백엔드에서 excluded 목록 가져오기
   const fetchExcludedFromServer = async () => {
     try {
       const res = await fetch(
@@ -144,16 +147,13 @@ export default function AiRecommendDetailScreen({
       const json = await res.json();
       const ids = json?.excludedContentIds ?? [];
       setExcludedIds(new Set(ids));
-    } catch {
-      // 없어도 동작하게 무시
-    }
+    } catch {}
   };
 
-  // ✅ 추천 호출 공통 함수
   const fetchRecommendAndRender = async ({ keepPinned = true } = {}) => {
     const exclude = new Set(excludedIds);
     if (keepPinned) {
-      for (const id of pinnedIds) exclude.add(id); // pinned 중복 추천 방지
+      for (const id of pinnedIds) exclude.add(id);
     }
 
     const body = buildRecommendBody(exclude);
@@ -175,7 +175,6 @@ export default function AiRecommendDetailScreen({
     const recJson = await recRes.json();
     const results = recJson?.results ?? [];
 
-    // ✅ 프론트에서도 제외 필터링(추천서버 exclude 미지원 대비)
     const filtered = results.filter((r) => {
       const id = r?.id;
       if (!id) return false;
@@ -183,7 +182,6 @@ export default function AiRecommendDetailScreen({
       return true;
     });
 
-    // 화면용 변환 (최대 10개)
     const mapped = filtered.slice(0, 10).map((r, idx) => ({
       number: idx + 2,
       type: r.content_type_name || "추천",
@@ -201,17 +199,14 @@ export default function AiRecommendDetailScreen({
       contentTypeName: r.content_type_name,
     }));
 
-    // ✅ pinned(고정) 카드들 유지
     const pinnedList = keepPinned
       ? waypointsState.filter((w) => w.contentId && pinnedIds.has(w.contentId))
       : [];
 
-    // ✅ 최종 리스트: [역] + [고정] + [새 추천]
     const finalListRaw = [stationWp, ...pinnedList, ...mapped].filter(
       (w) => w.latitude && w.longitude
     );
 
-    // ✅ number 재부여(리스트 key용/정렬용)
     const finalList = finalListRaw.map((w, idx) => ({
       ...w,
       number: idx + 1,
@@ -222,7 +217,6 @@ export default function AiRecommendDetailScreen({
     return { mappedNew: mapped, finalList };
   };
 
-  // ✅ 최초 진입
   useEffect(() => {
     console.log("[AI DETAIL] searchParams:", searchParams);
 
@@ -244,7 +238,6 @@ export default function AiRecommendDetailScreen({
           keepPinned: true,
         });
 
-        // ✅ 처음 결과 저장(우리 백엔드)
         setSaving(true);
         const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
           method: "POST",
@@ -284,7 +277,6 @@ export default function AiRecommendDetailScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, ticketId, destName, travelPreferenceForApi]);
 
-  // ✅ 하트 토글
   const togglePin = (contentId) => {
     if (!contentId) return;
     setPinnedIds((prev) => {
@@ -295,20 +287,17 @@ export default function AiRecommendDetailScreen({
     });
   };
 
-  // ✅ 새로고침: 미고정은 삭제+제외 등록, pinned는 유지
   const handleRefresh = async () => {
     if (!userId || !ticketId) return;
 
     try {
       setRefreshing(true);
 
-      // 1) 현재 리스트에서 “미고정 contentId” 추출 (기차역 제외)
       const removable = waypointsState
         .filter((w) => w.contentId)
         .filter((w) => !pinnedIds.has(w.contentId))
         .map((w) => w.contentId);
 
-      // 2) 서버 cleanup 요청 (삭제 + excluded 등록)
       if (removable.length > 0) {
         const cleanupRes = await fetch(
           `${API_BASE}/user-picks/refresh-cleanup`,
@@ -331,17 +320,14 @@ export default function AiRecommendDetailScreen({
         }
       }
 
-      // 3) excludedIds에 removable 추가
       setExcludedIds((prev) => {
         const next = new Set(prev);
         for (const id of removable) next.add(id);
         return next;
       });
 
-      // 4) 추천 다시 받기 + 화면 반영 (pinned 유지)
       const { mappedNew } = await fetchRecommendAndRender({ keepPinned: true });
 
-      // 5) 새로 받은 것들만 다시 user_pick 저장
       setSaving(true);
       const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
         method: "POST",
@@ -382,13 +368,6 @@ export default function AiRecommendDetailScreen({
     }
   };
 
-  const routeLabel = useMemo(() => {
-    if (fromName && toName) return `${fromName} - ${toName}`;
-    // 혹시 searchParams가 없거나 비어있을 때만 segment fallback
-    return segment;
-  }, [fromName, toName, segment]);
-
-  // ✅ 지도 중심: 리스트 맨 위(기차역) 기준
   const camera = useMemo(() => {
     const station = waypointsState?.[0];
     return {
@@ -398,7 +377,6 @@ export default function AiRecommendDetailScreen({
     };
   }, [waypointsState]);
 
-  // ✅ 지도에 찍을 좌표만 필터링
   const markers = useMemo(() => {
     return waypointsState.filter((w) => w.latitude && w.longitude);
   }, [waypointsState]);
@@ -412,7 +390,6 @@ export default function AiRecommendDetailScreen({
       />
 
       <View style={styles.container}>
-        {/* 지도 */}
         <View style={styles.mapWrap}>
           <NaverMapView
             style={styles.mapImg}
@@ -426,22 +403,20 @@ export default function AiRecommendDetailScreen({
                 key={`${w.number}-${w.title}`}
                 latitude={w.latitude}
                 longitude={w.longitude}
-                image={getMarkerIcon(w, pinnedIds)} // ✅ PNG 핀 적용
+                image={getMarkerIcon(w, pinnedIds)}
                 width={32}
                 height={42}
-                anchor={{ x: 0.5, y: 1 }} // ✅ 핀 끝이 좌표에 맞도록
+                anchor={{ x: 0.5, y: 1 }}
               />
             ))}
           </NaverMapView>
 
           <View style={styles.routeSummary}>
             <Image source={imgAvatar} style={styles.avatarSmall} />
-            <Text style={styles.routeText}>{routeLabel}</Text>
-            {/* <Text style={styles.routeText}>{segment}</Text> */}
+            <Text style={styles.routeText}>{topLabel}</Text>
           </View>
         </View>
 
-        {/* 로딩/에러 */}
         {loading ? (
           <View style={{ width: 332, alignItems: "center", paddingTop: 16 }}>
             <ActivityIndicator />
@@ -457,7 +432,6 @@ export default function AiRecommendDetailScreen({
           </View>
         ) : (
           <>
-            {/* ✅ 헤더: 새로고침 버튼 */}
             <View style={styles.listHeaderRow}>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: Colors.korailGray, fontSize: 12 }}>
@@ -486,7 +460,6 @@ export default function AiRecommendDetailScreen({
               </TouchableOpacity>
             </View>
 
-            {/* 리스트 */}
             <ScrollView
               ref={scrollRef}
               style={styles.detailSection}
