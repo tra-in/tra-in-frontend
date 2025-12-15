@@ -29,6 +29,9 @@ const imgAvatar = AVATAR.AVATAR;
 const RECOMMENDER_API_BASE = "http://10.0.2.2:8000";
 const DEFAULT_BASE = { latitude: 36.3258, longitude: 127.4353 };
 
+const fromName = searchParams?.from ?? "";
+const toName = searchParams?.to ?? "";
+
 // ✅ 커스텀 핀 PNG (경로는 AiRecommendDetailScreen.js 기준으로 조정 필요할 수 있음)
 const PIN_BLUE = require("../../assets/Icons/blue.png");
 const PIN_GRAY = require("../../assets/Icons/gray.png");
@@ -379,6 +382,12 @@ export default function AiRecommendDetailScreen({
     }
   };
 
+  const routeLabel = useMemo(() => {
+    if (fromName && toName) return `${fromName} - ${toName}`;
+    // 혹시 searchParams가 없거나 비어있을 때만 segment fallback
+    return segment;
+  }, [fromName, toName, segment]);
+
   // ✅ 지도 중심: 리스트 맨 위(기차역) 기준
   const camera = useMemo(() => {
     const station = waypointsState?.[0];
@@ -419,7 +428,7 @@ export default function AiRecommendDetailScreen({
                 longitude={w.longitude}
                 image={getMarkerIcon(w, pinnedIds)} // ✅ PNG 핀 적용
                 width={32}
-                height={40}
+                height={42}
                 anchor={{ x: 0.5, y: 1 }} // ✅ 핀 끝이 좌표에 맞도록
               />
             ))}
@@ -427,7 +436,8 @@ export default function AiRecommendDetailScreen({
 
           <View style={styles.routeSummary}>
             <Image source={imgAvatar} style={styles.avatarSmall} />
-            <Text style={styles.routeText}>{segment}</Text>
+            <Text style={styles.routeText}>{routeLabel}</Text>
+            {/* <Text style={styles.routeText}>{segment}</Text> */}
           </View>
         </View>
 
