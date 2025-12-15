@@ -11,8 +11,13 @@ import {
 } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
 import LoadingScreen from "./LoadingScreen";
+import { CheckIcon, CheckIconBlue } from "../components/Icons";
 import { TRAVEL_API_BASE } from "../config/api";
-import { mapPreference, buildQuery } from "../utils/preference";
+import {
+  mapPreference,
+  buildQuery,
+  contentTypesFromQuery,
+} from "../utils/preference";
 import { CITY_CENTER, getCityCenter } from "../utils/geo";
 
 export default function TravelRecommendListScreen({
@@ -42,6 +47,9 @@ export default function TravelRecommendListScreen({
     [preference, region]
   );
 
+  // query 기반 content_types 도출
+  const contentTypes = useMemo(() => contentTypesFromQuery(query), [query]);
+
   // ✅ Swagger body에 맞춘 payload (필요 시 값만 조정)
   const payload = useMemo(() => {
     return {
@@ -50,9 +58,9 @@ export default function TravelRecommendListScreen({
       query,
       travel_preference: travelPref,
 
-      // 너 Swagger 예시 기반 기본값들
-      content_types: ["12", "39"], // 예: 관광지/음식점 등 (원하면 나중에 선호도별로 바꿀 수 있음)
-      max_distance_km: 10,
+      // query 기반 content types
+      content_types: contentTypes,
+      max_distance_km: 30,
       n_results: 10,
 
       distance_weight: 0.4,
@@ -148,6 +156,25 @@ export default function TravelRecommendListScreen({
                 return (
                   <View style={styles.cardContainer}>
                     <View style={styles.card}>
+                      <TouchableOpacity
+                        style={[
+                          styles.thumbsUpButton,
+                          isSelected && styles.thumbsUpButtonActive,
+                        ]}
+                        onPress={() => {
+                          setSelectedItems((prev) => ({
+                            ...prev,
+                            [item?.id]: !prev[item?.id],
+                          }));
+                        }}
+                      >
+                        {isSelected ? (
+                          <CheckIconBlue size={20} />
+                        ) : (
+                          <CheckIcon size={20} />
+                        )}
+                      </TouchableOpacity>
+
                       <Text style={styles.cardTitle}>
                         {item?.title ?? "제목 없음"}
                       </Text>
@@ -165,22 +192,6 @@ export default function TravelRecommendListScreen({
                         </Text>
                       )}
                     </View>
-                    <TouchableOpacity
-                      style={[
-                        styles.thumbsUpButton,
-                        isSelected && styles.thumbsUpButtonActive,
-                      ]}
-                      onPress={() => {
-                        setSelectedItems((prev) => ({
-                          ...prev,
-                          [item?.id]: !prev[item?.id],
-                        }));
-                      }}
-                    >
-                      <Text style={styles.thumbsUpText}>
-                        {isSelected ? "👍" : "👍"}
-                      </Text>
-                    </TouchableOpacity>
                   </View>
                 );
               }}
@@ -222,8 +233,6 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   cardContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
     marginBottom: 8,
   },
   card: {
@@ -232,22 +241,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 10,
+    position: "relative",
   },
   cardTitle: { fontWeight: "700", marginBottom: 4 },
   cardSub: { color: "#555", fontSize: 12 },
   cardTag: { marginTop: 6, color: "#0A84FF", fontWeight: "600" },
 
   thumbsUpButton: {
-    marginLeft: 8,
-    padding: 10,
+    position: "absolute",
+    top: 8,
+    right: 8,
+    padding: 6,
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
     backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
-    minWidth: 50,
-    minHeight: 50,
   },
   thumbsUpButtonActive: {
     backgroundColor: "#fff3cd",
