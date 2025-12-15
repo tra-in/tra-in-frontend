@@ -2,12 +2,31 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Colors, Typography, Spacing, BorderRadius } from "../constants/theme";
 
-const ReservationCard = ({ reservation, onPress, compact = false }) => {
+const ReservationCard = ({ reservation, onPress, compact = false, allSeats = [] }) => {
   // 모든 좌석 정보를 배열로 구성
-  const allSeats = [
-    reservation.seat, // 기본 좌석
-    ...reservation.transfers.map(t => t.seat) // 경유지 좌석들
-  ].filter(Boolean); // null/undefined 제거
+  const transfers = Array.isArray(reservation.transfers) ? reservation.transfers : [];
+  let seatList;
+  if (compact) {
+    // compact 모드: allSeats prop이 있으면 사용, 없으면 fallback
+    const baseSeats = Array.isArray(allSeats) && allSeats.length > 0
+      ? allSeats
+      : [
+          (reservation.carNo !== undefined && reservation.seat) ? `${reservation.carNo}호차 ${reservation.seat}` : reservation.seat,
+          ...transfers.map(t => (t.carNo !== undefined && t.seat ? `${t.carNo}호차 ${t.seat}` : t.seat))
+        ].filter(Boolean);
+    // 항상 1-8D 형식으로 변환
+    seatList = baseSeats.map(s => {
+      const match = typeof s === 'string' && s.match(/(\d+)호차\s*([A-Z0-9]+)/i);
+      if (match) return `${match[1]}-${match[2]}`;
+      return s;
+    });
+  } else {
+    // 일반 목록: 호차+좌석(1호차 8D) 형식, 줄바꿈
+    seatList = [
+      (reservation.carNo !== undefined && reservation.seat) ? `${reservation.carNo}호차 ${reservation.seat}` : reservation.seat,
+      ...transfers.map(t => (t.carNo !== undefined && t.seat ? `${t.carNo}호차 ${t.seat}` : t.seat))
+    ].filter(Boolean);
+  }
 
   return (
     <TouchableOpacity
@@ -28,9 +47,9 @@ const ReservationCard = ({ reservation, onPress, compact = false }) => {
         {/* 화살표와 좌석 */}
         <View style={styles.arrowContainer}>
           {/* 좌석 정보 (화살표 위) - 모든 좌석 */}
-          {allSeats.length > 0 && (
+          {seatList.length > 0 && (
             <Text style={styles.seats}>
-              {allSeats.join(", ")}
+              {seatList.join("\n")}
             </Text>
           )}
           {/* 화살표 */}
@@ -103,7 +122,7 @@ const styles = StyleSheet.create({
   },
   /* compact variants */
   cardCompact: {
-    height: 110,
+    height: 140,
     paddingHorizontal: Spacing.md,
     paddingTop: 8,
     borderRadius: 14,

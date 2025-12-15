@@ -11,9 +11,7 @@ export default function LoginScreen({ onLogin }) {
     onLogin(fakeUser);
   };
 
-  const handleSignUp = () => {
-    console.log("회원가입 버튼 클릭");
-  };
+  // 회원가입은 아래 Figma 버튼으로 제공합니다.
 
   return (
     <View style={styles.root}>
@@ -44,16 +42,21 @@ export default function LoginScreen({ onLogin }) {
             secureTextEntry
           />
 
-          <View style={styles.signupRow}>
-            <Pressable onPress={handleSignUp}>
-              <Text style={styles.signupText}>회원가입</Text>
+          <View style={styles.buttonContainerInCard}>
+            <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
+              <Image source={require("../../assets/norm_sign_in_btn.png")} style={styles.buttonImage} />
             </Pressable>
-          </View>
 
-          <View style={styles.korailWrapper}>
-            <Pressable style={styles.korailButton} onPress={handleKorailLogin}>
-              <Image source={require("../../assets/korail.png")} style={styles.korailImage} />
-              <Text style={styles.korailText}>KORAIL</Text>
+            <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
+              <Image source={require("../../assets/korail_sign_in_btn.png")} style={styles.buttonImage} />
+            </Pressable>
+
+            <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
+              <Image source={require("../../assets/kakao_sign_in_btn.png")} style={styles.buttonImage} />
+            </Pressable>
+
+            <Pressable style={styles.figmaBtn} onPress={handleKorailLogin}>
+              <Image source={require("../../assets/norm_sign_up_btn.png")} style={styles.buttonImage} />
             </Pressable>
           </View>
         </View>
@@ -71,9 +74,12 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: "center",
+    alignItems: 'center',
   },
   card: {
+    width: '100%',
     padding: 24,
+    paddingBottom: 28,
     borderRadius: 16,
     backgroundColor: "#fafafa",
     borderWidth: 1,
@@ -103,7 +109,7 @@ const styles = StyleSheet.create({
   },
   signupRow: {
     alignItems: "flex-end",
-    marginTop: 8,
+    marginTop: 10,
   },
   signupText: {
     fontSize: 12,
@@ -113,27 +119,21 @@ const styles = StyleSheet.create({
     marginTop: 24,
     alignItems: "center",
   },
-  korailButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "#0A84FF",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  korailText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  korailHint: {
-    fontSize: 11,
-    color: "#777",
-    marginTop: 4,
-    textAlign: "center",
-  },
-   korailImage: {
-     width: 60,
-     height: 60,
-     resizeMode: "contain",
+   buttonContainerInCard: {
+     width: '100%',
+     alignItems: 'center',
+     marginTop: 20,
+   },
+   figmaBtn: {
+     width: '100%',
+     height: 44,
+     borderRadius: 20,
+     overflow: 'hidden',
+     marginVertical: 1,
+   },
+   buttonImage: {
+     width: '100%',
+     height: '100%',
+     resizeMode: 'contain',
    },
 });

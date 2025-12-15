@@ -1,14 +1,21 @@
 import React from "react";
-import { Text,  View,  ScrollView,  StyleSheet,  TouchableOpacity,} from "react-native";
+import {
+  Text,
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { screenStyles } from "../constants/screenStyles";
 import { Colors, Spacing } from "../constants/theme";
 import ReservationCard from "../components/ReservationCard";
 import BadgeCard from "../components/BadgeCard";
-import { dummyReservations as DUMMY_RESERVATIONS } from "../data/dummyReservations";
+// import { dummyReservations as DUMMY_RESERVATIONS } from "../data/dummyReservations";
 import { generateDummyBadges } from "../data/dummyBadges";
 import ScreenHeader from "../components/ScreenHeader";
 import BottomNavigation from "../navigation/BottomNavigation";
+import { API_BASE } from "../config/api";
 
 const DUMMY_BADGES = generateDummyBadges();
 
@@ -22,6 +29,28 @@ const MyTicketsScreen = ({
     if (setActiveScreen) setActiveScreen(null);
     setActiveTab(newTab);
   };
+
+  const [reservations, setReservations] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`${API_BASE}/user-tickets?userId=1`);
+        if (!response.ok) throw new Error("서버 응답 오류");
+        const data = await response.json();
+        setReservations(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReservations();
+  }, []);
 
   return (
     <View style={screenStyles.container} edges={[]}>
@@ -89,18 +118,134 @@ const MyTicketsScreen = ({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingLeft: 4, paddingRight: 12 }}
           >
-            {DUMMY_RESERVATIONS.slice(0, 4).map((r) => (
-              <View key={r.id} style={styles.recentResWrapper}>
-                <ReservationCard
-                  reservation={r}
-                  compact
-                  onPress={() => {
-                    if (setSelectedReservation) setSelectedReservation(r);
-                    if (setActiveScreen) setActiveScreen("reservationDetail");
-                  }}
-                />
-              </View>
-            ))}
+            {(() => {
+              if (loading) return <Text style={{ margin: 16 }}>로딩중...</Text>;
+              if (error)
+                return (
+                  <Text style={{ margin: 16, color: "red" }}>
+                    에러: {error}
+                  </Text>
+                );
+              // ticket_id로 묶어서 최근 예약 4개만 보여줌
+              return Object.values(
+                reservations.reduce((acc, reservation, idx) => {
+                  const ticketId =
+                    reservation.ticketId || reservation.ticket_id || idx;
+                  if (!acc[ticketId])
+                    acc[ticketId] = { ...reservation, legs: [] };
+                  acc[ticketId].legs = (acc[ticketId].legs || []).concat(
+                    reservation.legs || []
+                  );
+                  return acc;
+                }, {})
+              )
+                .slice(0, 4)
+                .map((group, groupIdx) => {
+                  let legs = group.legs || [];
+                  if (legs.length === 0) return null;
+                  // legs를 출발시간 기준으로 정렬 (출발→도착 순서 보장)
+                  legs = [...legs].sort((a, b) => {
+                    const at = a.departureTime || "";
+                    const bt = b.departureTime || "";
+                    return at.localeCompare(bt);
+                  });
+                  // 출발: 첫 leg의 originStation, 도착: 마지막 leg의 destStation, 경유: 중간 leg들의 destStation(중복 제거)
+                  const first = legs[0];
+                  const last = legs[legs.length - 1];
+                  // 경유지: 중간 leg들의 destStation, 중복 제거
+                  const transferStations = legs
+                    .slice(0, -1)
+                    .map((l) => l.destStation)
+                    .filter(
+                      (station, idx, arr) =>
+                        arr.indexOf(station) === idx &&
+                        station !== last.destStation
+                    );
+                  const transfers = [];
+                  const formatTime = (dt) => (dt ? dt.slice(11, 16) : "");
+                  const formatDate = (dt) => {
+                    if (!dt) return "";
+                    const d = dt.slice(0, 10).replace(/-/g, ".");
+                    const dayKor = ["일", "월", "화", "수", "목", "금", "토"][
+                      new Date(dt).getDay()
+                    ];
+                    return `${d}${dayKor ? ` (${dayKor})` : ""}`;
+                  };
+                  for (let i = 0; i < legs.length - 1; i++) {
+                    const arrivalLeg = legs[i];
+                    const station = arrivalLeg.destStation;
+                    const departureLeg = legs[i + 1];
+                    transfers.push({
+                      station,
+                      arrivalTime: arrivalLeg.arrivalTime
+                        ? formatTime(arrivalLeg.arrivalTime)
+                        : "",
+                      arrivalDate: arrivalLeg.arrivalTime
+                        ? formatDate(arrivalLeg.arrivalTime)
+                        : "",
+                      departureTime:
+                        departureLeg && departureLeg.departureTime
+                          ? formatTime(departureLeg.departureTime)
+                          : "",
+                      departureDate:
+                        departureLeg && departureLeg.departureTime
+                          ? formatDate(departureLeg.departureTime)
+                          : "",
+                      seat: arrivalLeg.seatCode,
+                      carNo: arrivalLeg.carNo,
+                    });
+                  }
+                  const depDate = first.departureTime
+                    ? formatDate(first.departureTime)
+                    : "";
+                  const arrDate = last.arrivalTime
+                    ? formatDate(last.arrivalTime)
+                    : "";
+                  // 좌석 정보: 모든 구간을 '호차 좌석' 형식(1호차 4B)으로 줄바꿈
+                  const allSeats = legs
+                    .map((l) =>
+                      l.carNo !== undefined && l.seatCode
+                        ? `${l.carNo}호차 ${l.seatCode}`
+                        : l.seatCode
+                    )
+                    .filter(Boolean);
+                  const formatted = {
+                    id: group.ticketId || group.ticket_id || groupIdx,
+                    date: depDate,
+                    departure: first.originStation,
+                    arrival: last.destStation,
+                    departureTime: first.departureTime
+                      ? first.departureTime.slice(11, 16)
+                      : "",
+                    arrivalTime: last.arrivalTime
+                      ? last.arrivalTime.slice(11, 16)
+                      : "",
+                    departureDate: depDate,
+                    arrivalDate: arrDate,
+                    seat: last.seatCode,
+                    carNo: last.carNo,
+                    trainNo: last.trainNo,
+                    transfers,
+                    legs,
+                    allSeats, // compact 모드에서 사용
+                  };
+                  return (
+                    <View key={formatted.id} style={styles.recentResWrapper}>
+                      <ReservationCard
+                        reservation={formatted}
+                        compact
+                        allSeats={allSeats}
+                        onPress={() => {
+                          if (setSelectedReservation)
+                            setSelectedReservation(formatted);
+                          if (setActiveScreen)
+                            setActiveScreen("reservationDetail");
+                        }}
+                      />
+                    </View>
+                  );
+                });
+            })()}
           </ScrollView>
 
           {/* Completed badges */}
@@ -109,7 +254,8 @@ const MyTicketsScreen = ({
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
               onPress={() => {
-                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveTab)
+                  setActiveTab("badgeList", { filter: "completed" });
                 if (setActiveScreen) setActiveScreen(null);
               }}
             >
@@ -147,7 +293,8 @@ const MyTicketsScreen = ({
               style={styles.sectionHeaderTouchable}
               activeOpacity={0.7}
               onPress={() => {
-                if (setActiveTab) setActiveTab("badgeList");
+                if (setActiveTab)
+                  setActiveTab("badgeList", { filter: "incomplete" });
                 if (setActiveScreen) setActiveScreen(null);
               }}
             >

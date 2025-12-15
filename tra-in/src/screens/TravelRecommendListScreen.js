@@ -38,7 +38,7 @@ export default function TravelRecommendListScreen({
   const [selectedItems, setSelectedItems] = useState({}); // { itemId: true/false }
 
   // ✅ 디버그 박스 토글 (원하면 false로)
-  const DEBUG = true;
+  const DEBUG = false;
 
   const center = useMemo(() => getCityCenter(region), [region]);
   const travelPref = useMemo(() => mapPreference(preference), [preference]);
@@ -60,7 +60,7 @@ export default function TravelRecommendListScreen({
 
       // query 기반 content types
       content_types: contentTypes,
-      max_distance_km: 30,
+      max_distance_km: 60,
       n_results: 10,
 
       distance_weight: 0.4,
