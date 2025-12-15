@@ -230,7 +230,7 @@ export default function AiRecommendDetailScreen({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId,
-            ticketId, // user_tickets.ticket_id
+            userTicketId: ticketId, // user_tickets.ticket_id
             destStation: destName,
             picks: mapped.map((m) => ({
               contentId: m.contentId,
@@ -242,6 +242,8 @@ export default function AiRecommendDetailScreen({
               longitude: m.longitude,
               imageUrl: m.imageUrl,
               phone: m.phone,
+              startTime: null,
+              endTime: null,
               // startTime/endTime은 지금 null로 두고, 나중에 로직 생기면 채우자
               startTime: null,
               endTime: null,
