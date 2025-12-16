@@ -7,8 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
@@ -18,23 +16,21 @@ import { Colors } from "../constants/theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AVATAR } from "../constants/images";
 import { API_BASE } from "../config/api";
+import LoadingScreen from "./LoadingScreen"; // ✅ 추가
 import {
   NaverMapView,
   NaverMapMarkerOverlay,
 } from "@mj-studio/react-native-naver-map";
 
-const { width } = Dimensions.get("window");
 const imgAvatar = AVATAR.AVATAR;
 
 const RECOMMENDER_API_BASE = "http://10.0.2.2:8000";
 const DEFAULT_BASE = { latitude: 36.3258, longitude: 127.4353 };
 
-// ✅ 커스텀 핀 PNG
 const PIN_BLUE = require("../../assets/Icons/blue.png");
 const PIN_GRAY = require("../../assets/Icons/gray.png");
 const PIN_PINK = require("../../assets/Icons/pink.png");
 
-// ✅ 핀 결정 로직: 기차역(blue) / pinned(pink) / unpinned(gray)
 function getMarkerIcon(wp, pinnedIds) {
   const isStation = wp.type === "기차역" || wp.contentId == null;
   if (isStation) return PIN_BLUE;
@@ -47,28 +43,28 @@ export default function AiRecommendDetailScreen({
   setActiveScreen,
   searchParams,
   segment = "부산 - 대전",
+  prefetched,
 }) {
   const scrollRef = useRef(null);
 
-  const [loading, setLoading] = useState(true);
+  // ✅ "무조건 4초 로딩"을 위한 상태
+  const [forceLoading, setForceLoading] = useState(true);
+
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const [waypointsState, setWaypointsState] = useState([]);
-
-  // ✅ 하트(고정) / 제외(재추천 금지)
   const [pinnedIds, setPinnedIds] = useState(() => new Set());
   const [excludedIds, setExcludedIds] = useState(() => new Set());
 
   const userId = searchParams?.userId ?? null;
   const ticketId = searchParams?.ticketId ?? null;
 
-  // ✅ 여기서 “도착지”가 기준. ReservationDetailScreen에서 구간 버튼 누르면 이 destName만 바꿔서 넘김.
-  const destName = searchParams?.destName ?? "";
+  const destName = searchParams?.destName ?? prefetched?.destName ?? "";
   const travelPreferenceKorean = searchParams?.travelPreference ?? "자연";
 
-  // ✅ 상단 라벨: (구간) segment > (전체) routeLabel > props segment
   const topLabel = useMemo(() => {
     return searchParams?.segment || searchParams?.routeLabel || segment;
   }, [searchParams?.segment, searchParams?.routeLabel, segment]);
@@ -82,7 +78,6 @@ export default function AiRecommendDetailScreen({
       자연: "nature",
       문화: "culture",
     };
-
     const lowered = String(travelPreferenceKorean).toLowerCase();
     const englishSet = new Set([
       "relaxation",
@@ -101,14 +96,18 @@ export default function AiRecommendDetailScreen({
     if (setActiveScreen) setActiveScreen(null);
   };
 
-  // ✅ 추천 API 요청 바디
+  // ✅ 진입 시 "무조건 4초 로딩"
+  useEffect(() => {
+    setForceLoading(true);
+    const t = setTimeout(() => setForceLoading(false), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
   const buildRecommendBody = (excludeSet) => {
     const query =
       travelPreferenceKorean && destName
         ? `${destName}에서 ${travelPreferenceKorean} 중심으로 갈만한 곳 추천`
         : "가까운 여행지 추천";
-
-    const excludeIdsArr = Array.from(excludeSet ?? []);
 
     return {
       latitude: DEFAULT_BASE.latitude,
@@ -121,22 +120,9 @@ export default function AiRecommendDetailScreen({
       distance_weight: 0.4,
       similarity_weight: 0.4,
       preference_weight: 0.2,
-      exclude_content_ids: excludeIdsArr,
+      exclude_content_ids: Array.from(excludeSet ?? []),
     };
   };
-
-  // ✅ “역 카드”는 항상 맨 위
-  const stationWp = useMemo(() => {
-    return {
-      number: 1,
-      type: "기차역",
-      title: destName ? `${destName}역` : "도착역",
-      desc: destName ? `기차역 | ${destName}` : "기차역",
-      latitude: DEFAULT_BASE.latitude,
-      longitude: DEFAULT_BASE.longitude,
-      contentId: null,
-    };
-  }, [destName]);
 
   const fetchExcludedFromServer = async () => {
     try {
@@ -182,6 +168,16 @@ export default function AiRecommendDetailScreen({
       return true;
     });
 
+    const stationWp = {
+      number: 1,
+      type: "기차역",
+      title: destName ? `${destName}역` : "도착역",
+      desc: destName ? `기차역 | ${destName}` : "기차역",
+      latitude: DEFAULT_BASE.latitude,
+      longitude: DEFAULT_BASE.longitude,
+      contentId: null,
+    };
+
     const mapped = filtered.slice(0, 10).map((r, idx) => ({
       number: idx + 2,
       type: r.content_type_name || "추천",
@@ -213,13 +209,10 @@ export default function AiRecommendDetailScreen({
     }));
 
     setWaypointsState(finalList);
-
     return { mappedNew: mapped, finalList };
   };
 
   useEffect(() => {
-    console.log("[AI DETAIL] searchParams:", searchParams);
-
     if (!userId || !ticketId) {
       Alert.alert("오류", "추천에 필요한 userId/ticketId가 없습니다.", [
         { text: "OK", onPress: handleBack },
@@ -227,55 +220,29 @@ export default function AiRecommendDetailScreen({
       return;
     }
 
+    if (prefetched?.ready && Array.isArray(prefetched?.waypoints)) {
+      setWaypointsState(prefetched.waypoints);
+      setPinnedIds(new Set(prefetched.pinnedIds || []));
+      setExcludedIds(new Set(prefetched.excludedIds || []));
+      setErrorMsg("");
+      return;
+    }
+
     (async () => {
       try {
         setLoading(true);
         setErrorMsg("");
-
         await fetchExcludedFromServer();
-
-        const { mappedNew } = await fetchRecommendAndRender({
-          keepPinned: true,
-        });
-
-        setSaving(true);
-        const saveRes = await fetch(`${API_BASE}/user-picks/bulk`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            userTicketId: ticketId,
-            destStation: destName,
-            picks: mappedNew.map((m) => ({
-              contentId: m.contentId,
-              title: m.title,
-              address: m.address,
-              distanceKm: m.distanceKm,
-              contentTypeName: m.contentTypeName,
-              latitude: m.latitude,
-              longitude: m.longitude,
-              imageUrl: m.imageUrl,
-              phone: m.phone,
-              startTime: null,
-              endTime: null,
-            })),
-          }),
-        });
-
-        if (!saveRes.ok) {
-          const text = await saveRes.text().catch(() => "");
-          console.log("[WARN] user_pick 저장 실패:", saveRes.status, text);
-        }
+        await fetchRecommendAndRender({ keepPinned: true });
       } catch (e) {
         setErrorMsg(e?.message ?? "추천 결과를 불러오지 못했어요.");
         setWaypointsState([]);
       } finally {
-        setSaving(false);
         setLoading(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, ticketId, destName, travelPreferenceForApi]);
+  }, [userId, ticketId, destName, travelPreferenceForApi, prefetched?.ready]);
 
   const togglePin = (contentId) => {
     if (!contentId) return;
@@ -381,6 +348,11 @@ export default function AiRecommendDetailScreen({
     return waypointsState.filter((w) => w.latitude && w.longitude);
   }, [waypointsState]);
 
+  // ✅ 여기서 "무조건 4초" + "혹시 네트워크 로딩" 둘 다 처리
+  if (forceLoading || loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <View style={screenStyles.container}>
       <ScreenHeader
@@ -417,14 +389,7 @@ export default function AiRecommendDetailScreen({
           </View>
         </View>
 
-        {loading ? (
-          <View style={{ width: 332, alignItems: "center", paddingTop: 16 }}>
-            <ActivityIndicator />
-            <Text style={{ marginTop: 10, color: Colors.korailGray }}>
-              추천 장소 불러오는 중...
-            </Text>
-          </View>
-        ) : errorMsg ? (
+        {errorMsg ? (
           <View style={{ width: 332, alignItems: "center", paddingTop: 16 }}>
             <Text style={{ color: "crimson", textAlign: "center" }}>
               {errorMsg}
@@ -493,11 +458,7 @@ export default function AiRecommendDetailScreen({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-  },
+  container: { flex: 1, backgroundColor: "#fff", alignItems: "center" },
   mapWrap: {
     width: 332,
     height: 301,
@@ -507,11 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     position: "relative",
   },
-  mapImg: {
-    width: 332,
-    height: 301,
-    borderRadius: 10,
-  },
+  mapImg: { width: 332, height: 301, borderRadius: 10 },
   routeSummary: {
     position: "absolute",
     top: 11,
@@ -525,20 +482,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
   },
-  avatarSmall: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    marginRight: 6,
-  },
-  routeText: {
-    fontSize: 12,
-    color: "#000",
-  },
-  detailSection: {
-    width: 332,
-    flex: 1,
-  },
+  avatarSmall: { width: 24, height: 24, borderRadius: 12, marginRight: 6 },
+  routeText: { fontSize: 12, color: "#000" },
+  detailSection: { width: 332, flex: 1 },
   listHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -546,7 +492,5 @@ const styles = StyleSheet.create({
     width: 332,
     marginBottom: 2,
   },
-  refreshBtn: {
-    padding: 6,
-  },
+  refreshBtn: { padding: 6 },
 });

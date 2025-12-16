@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import ScreenHeader from "../components/ScreenHeader";
-import { Colors } from "../constants/theme";
+import { screenStyles } from "../constants/screenStyles";
 import { API_BASE } from "../config/api";
 
 export default function PreferenceSurveyScreen({
@@ -41,7 +41,7 @@ export default function PreferenceSurveyScreen({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: searchParams.userId,
-          ticketId: searchParams.ticketId, // ✅ 핵심
+          ticketId: searchParams.ticketId,
           travelPreference: selected,
         }),
       });
@@ -63,46 +63,69 @@ export default function PreferenceSurveyScreen({
   };
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader showBackButton />
+    <View style={screenStyles.container}>
+      <ScreenHeader
+        showBackButton={true}
+        title="트레:in(人)"
+        onBackPress={() => setActiveScreen(null)}
+      />
 
-      <Text style={styles.title}>어떤 여행을 원하시나요?</Text>
+      {/* ✅ 폭 제한 + 가운데 정렬 래퍼 */}
+      <View style={styles.content}>
+        <Text style={styles.title}>어떤 여행을 원하시나요?</Text>
 
-      {options.map((opt) => (
-        <Pressable
-          key={opt.key}
-          style={[styles.option, selected === opt.key && styles.optionActive]}
-          onPress={() => setSelected(opt.key)}
-        >
-          <Text>{opt.label}</Text>
+        {options.map((opt) => (
+          <Pressable
+            key={opt.key}
+            style={[styles.option, selected === opt.key && styles.optionActive]}
+            onPress={() => setSelected(opt.key)}
+          >
+            <Text style={styles.optionText}>{opt.label}</Text>
+          </Pressable>
+        ))}
+
+        <Pressable style={styles.button} onPress={handleComplete}>
+          <Text style={styles.buttonText}>선호도 조사 완료</Text>
         </Pressable>
-      ))}
-
-      <Pressable style={styles.button} onPress={handleComplete}>
-        <Text style={{ color: "#fff" }}>선호도 조사 완료</Text>
-      </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  // ✅ 핵심: 화면 전체를 쓰되, 실제 콘텐츠는 maxWidth로 제한
+  content: {
+    flex: 1,
+    width: "100%",
+    maxWidth: 360, // <- 여기 숫자만 취향대로 (332~360 추천)
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+  },
+
   title: { fontSize: 20, fontWeight: "700", marginBottom: 20 },
+
   option: {
-    padding: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
     borderWidth: 1,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    marginBottom: 12,
   },
   optionActive: {
     backgroundColor: "#EEF3FA",
     borderColor: "#1F3A5F",
   },
+  optionText: {
+    fontSize: 16,
+  },
+
   button: {
-    marginTop: 24,
+    marginTop: 18,
     backgroundColor: "#1F3A5F",
-    padding: 16,
-    borderRadius: 14,
+    paddingVertical: 18,
+    borderRadius: 18,
     alignItems: "center",
   },
+  buttonText: { color: "#fff", fontWeight: "600" },
 });
